@@ -1,0 +1,7 @@
+.product-card {
+  transition: transform 0.2s;
+}
+.product-card:hover {
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 8px 32px rgba(60, 180, 75, 0.15);
+}
