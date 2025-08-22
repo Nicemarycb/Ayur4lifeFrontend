@@ -42,7 +42,7 @@ const handleRemoveFromWishlist = async (productId) => {
     for (const item of wishlist) {
       try {
         await addToCart(item.product.id, 1);
-        await removeFromWishlist(item.product.id);
+        await removeFromWishlist(item.id); // Use wishlistItemId
       } catch (err) {
         console.error('Failed to move item to cart:', err);
       }

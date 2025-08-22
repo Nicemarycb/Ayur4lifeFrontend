@@ -36,11 +36,18 @@ const Cart = () => {
     removeFromCart,
     clearCart,
     calculateTotals,
+    loadCart,
   } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const [updating, setUpdating] = useState({});
 
   const { subtotal, gst, total, totalItems } = calculateTotals();
+  // Load cart on component mount to ensure fresh data
+  useEffect((isAuthenticated) => {
+    if (isAuthenticated) {  // Assuming isAuthenticated from context or prop; adjust if needed
+      loadCart();
+    }
+  }, []);
 
   const handleQuantityChange = async (itemId, newQuantity) => {
     if (newQuantity < 1) return;
@@ -55,9 +62,9 @@ const Cart = () => {
     }
   };
 
-  const handleRemoveItem = async (productId) => {
+  const handleRemoveItem = async (itemId) => {
     try {
-      await removeFromCart(productId);
+      await removeFromCart(itemId);
     } catch (err) {
       console.error("Failed to remove item:", err);
     }
@@ -283,7 +290,7 @@ const Cart = () => {
                             <Button
                               variant="outline-warning"
                               size="sm"
-                              onClick={() => handleMoveToWishlist(item.product)}
+                              onClick={() => handleMoveToWishlist(item)}
                               title="Move to wishlist"
                             >
                               <FontAwesomeIcon icon={faHeart} />
@@ -291,7 +298,7 @@ const Cart = () => {
                             <Button
                               variant="outline-danger"
                               size="sm"
-                              onClick={() => handleRemoveItem(item.product.id)}
+                              onClick={() => handleRemoveItem(item.id)}
                               title="Remove from cart"
                             >
                               <FontAwesomeIcon icon={faTrash} />

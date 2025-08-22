@@ -315,7 +315,7 @@ const NavigationBar = () => {
               </Dropdown.Menu>
             </Dropdown>
 
-            {isAuthenticated && (
+            {/* {isAuthenticated && (
               <>
                 <Nav.Link as={Link} to="/wishlist" className="fw-semibold">
                   Wishlist
@@ -324,7 +324,7 @@ const NavigationBar = () => {
                   Cart
                 </Nav.Link>
               </>
-            )}
+            )} */}
           </Nav>
 
           {/* Search Form */}

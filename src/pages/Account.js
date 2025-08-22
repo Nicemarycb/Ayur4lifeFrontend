@@ -43,19 +43,20 @@ const Account = () => {
     fetchOrders();
   }, []);
 
-  const fetchOrders = async () => {
-    try {
-      setOrdersLoading(true);
-      const response = await axios.get('/api/orders');
-      setOrders(response.data);
-    } catch (err) {
-      console.error('Failed to fetch orders:', err);
-    } finally {
-      setOrdersLoading(false);
-      setLoading(false);
-    }
-  };
-
+// In the fetchOrders function, update the axios call to handle pagination
+const fetchOrders = async () => {
+  try {
+    setOrdersLoading(true);
+    const response = await axios.get('/api/orders?limit=100&page=1'); // Increased limit
+    setOrders(response.data.orders); // Access the orders array from response
+  } catch (err) {
+    console.error('Failed to fetch orders:', err);
+    setError('Failed to load orders. Please try again later.');
+  } finally {
+    setOrdersLoading(false);
+    setLoading(false);
+  }
+};
   const handleProfileInputChange = (e) => {
     const { name, value } = e.target;
     if (name.includes('.')) {
@@ -445,7 +446,7 @@ const Account = () => {
               </Tab.Pane>
 
               {/* Orders Tab */}
-              <Tab.Pane eventKey="orders">
+              {/* <Tab.Pane eventKey="orders"> */}
                 <Card>
                   <Card.Header>
                     <h5 className="mb-0">
@@ -470,49 +471,51 @@ const Account = () => {
                     ) : (
                       <div>
                         {orders.map((order) => (
-                          <Card key={order.id} className="mb-3">
-                            <Card.Header className="d-flex justify-content-between align-items-center">
-                              <div>
-                                <strong>Order #{order.orderId}</strong>
-                                <br />
-                                <small className="text-muted">
-                                  {new Date(order.createdAt).toLocaleDateString()}
-                                </small>
-                              </div>
-                              <div className="text-end">
-                                {getOrderStatusBadge(order.status)}
-                                <br />
-                                <strong className="text-primary">₹{order.total}</strong>
-                              </div>
-                            </Card.Header>
-                            <Card.Body>
-                              <div className="mb-3">
-                                <strong>Items:</strong>
-                                {order.items.map((item, index) => (
-                                  <div key={index} className="d-flex justify-content-between mt-2">
-                                    <span>{item.name} × {item.quantity}</span>
-                                    <span>₹{item.price}</span>
-                                  </div>
-                                ))}
-                              </div>
-                              <div className="mb-2">
-                                <strong>Shipping Address:</strong>
-                                <p className="mb-1">
-                                  {order.shippingAddress.street}<br />
-                                  {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zipCode}
-                                </p>
-                              </div>
-                              <div>
-                                <strong>Payment Method:</strong> {order.paymentMethod}
-                              </div>
-                            </Card.Body>
-                          </Card>
+                           <Card key={order.id} className="mb-3">
+    <Card.Header className="d-flex justify-content-between align-items-center">
+      <div>
+        <strong>Order #{order.orderNumber || order.id}</strong> // Use orderNumber if available
+        <br />
+        <small className="text-muted">
+          {new Date(order.createdAt).toLocaleDateString()}
+        </small>
+      </div>
+      <div className="text-end">
+        {getOrderStatusBadge(order.status)}
+        <br />
+        <strong className="text-primary">₹{order.finalAmount || order.total}</strong>
+      </div>
+    </Card.Header>
+    <Card.Body>
+      <div className="mb-3">
+        <strong>Items:</strong>
+        {order.items && order.items.map((item, index) => (
+          <div key={index} className="d-flex justify-content-between mt-2">
+            <span>{item.productName} × {item.quantity}</span>
+            <span>₹{(item.unitPrice * item.quantity).toFixed(2)}</span>
+          </div>
+        ))}
+      </div>
+      {order.shippingAddress && (
+        <div className="mb-2">
+          <strong>Shipping Address:</strong>
+          <p className="mb-1">
+            {order.shippingAddress.street}<br />
+            {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zipCode}
+          </p>
+        </div>
+      )}
+      <div>
+        <strong>Payment Method:</strong> {order.paymentMethod}
+      </div>
+    </Card.Body>
+  </Card>
                         ))}
                       </div>
                     )}
                   </Card.Body>
                 </Card>
-              </Tab.Pane>
+              {/* </Tab.Pane> */}
 
               {/* Security Tab */}
               <Tab.Pane eventKey="security">

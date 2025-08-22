@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect} from 'react';
 import { Container, Row, Col, Card, Button, Form, Alert, Spinner } from 'react-bootstrap';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams,useNavigate } from 'react-router-dom';
 import "./home.css";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart, faShoppingCart, faStar,faQuoteLeft } from '@fortawesome/free-solid-svg-icons';
@@ -15,13 +15,17 @@ const Home = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [togglingWishlist, setTogglingWishlist] = useState({});
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get('search');
   const [testimonials, setTestimonials] = useState([]);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [bestsellingProducts, setBestsellingProducts] = useState([]);
   
   const { isAuthenticated } = useUserAuth();
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadProducts();
@@ -38,7 +42,14 @@ const Home = () => {
       
       const response = await fetch(url);
       const data = await response.json();
-      setProducts(data.products || []);
+      const allProducts = data.products || [];
+      setProducts(allProducts);
+
+      // Assuming a product has isFeatured and isBestseller properties
+      // or we can just pick a few for display purposes
+      setFeaturedProducts(allProducts.slice(0, 4)); 
+      setBestsellingProducts(allProducts.slice(4, 8));
+
     } catch (error) {
       console.error('Error loading products:', error);
       setError('Failed to load products');
@@ -55,42 +66,65 @@ const loadTestimonials = () => {
     ]);
   };
 
-  const loadCategories = async () => {
-   try {
-    const response = await fetch('/api/products/categories/all');
-    const data = await response.json();
-    setCategories(data.categories || []);
-  } catch (error) {
-    console.error('Error loading categories:', error);
-    setCategories([]);
-  }
-};
-
-  const handleAddToCart = async (productId) => {
-    if (!isAuthenticated) {
-      alert('Please login to add items to cart');
-      return;
-    }
-    
-    const result = await addToCart(productId, 1);
-    if (result.success) {
-      alert('Product added to cart!');
+const loadCategories = async () => {
+    try {
+      const response = await fetch('/api/products/categories/all');
+      if (!response.ok) throw new Error('Failed to fetch categories');
+      const data = await response.json();
+      // Ensure categories are strings
+      const validCategories = (data.categories || []).map(category => 
+        typeof category === 'string' ? category : String(category?.id || category?.name || '')
+      ).filter(category => category.trim() !== '');
+      setCategories(validCategories);
+    } catch (error) {
+      setCategories([]);
+      setError('Failed to load categories');
     }
   };
 
-// src/pages/Home.js, src/pages/ProductDetail.js, and src/pages/CategoryProducts.js
 
-// src/pages/ProductDetail.js
+   const handleAddToCart = async (productId) => {
+    if (!isAuthenticated) {
+      setError('Please log in to add items to cart');
+      setTimeout(() => navigate('/login'), 2000);
+      return;
+    }
+    
+    try {
+      const result = await addToCart(productId, 1);
+      if (result.success) {
+        alert('Product added to cart!');
+      } else {
+        setError('Failed to add to cart');
+      }
+    } catch (err) {
+      setError('Failed to add to cart');
+    }
+  };
 
-const handleWishlistToggle = async (product) => {
-  if (isInWishlist(product.id)) {
-    // If it's already in the wishlist, remove it
-    await removeFromWishlist(product.id);
-  } else {
-    // If not, add it by passing the product ID
-    await addToWishlist(product.id);
-  }
-};
+
+const handleWishlistToggle = async (productId) => {
+    if (!isAuthenticated) {
+      setError('Please log in to add items to your wishlist');
+      setTimeout(() => navigate('/login'), 2000);
+      return;
+    }
+
+    try {
+      setTogglingWishlist(prev => ({ ...prev, [productId]: true }));
+      if (isInWishlist(productId)) {
+        await removeFromWishlist(productId);
+        alert('Removed from wishlist!');
+      } else {
+        await addToWishlist(productId);
+        alert('Added to wishlist!');
+      }
+    } catch (err) {
+      setError('Failed to update wishlist');
+    } finally {
+      setTogglingWishlist(prev => ({ ...prev, [productId]: false }));
+    }
+  };
 
   const handleContactSubmit = async (e) => {
     e.preventDefault();
@@ -112,6 +146,9 @@ const handleWishlistToggle = async (product) => {
   };
 
   const getCategoryDisplayName = (categoryId) => {
+    if (!categoryId || typeof categoryId !== 'string') {
+      return 'Unknown Category';
+    }
     return categoryId.charAt(0).toUpperCase() + categoryId.slice(1).replace(/-/g, ' ');
   };
 
@@ -124,8 +161,6 @@ const handleWishlistToggle = async (product) => {
       </UserLayout>
     );
   }
-
-  const showAllProductsSection = categories.length === 0 || products.length > 0;
 
   return (
     <UserLayout>
@@ -142,8 +177,8 @@ const handleWishlistToggle = async (product) => {
                 Discover the power of authentic Ayurvedic products for a healthier, more balanced life.
                 Natural remedies that have been trusted for centuries.
               </p>
-              <Button as={Link} to="/category/Herbs" variant="warning" size="lg" className="me-3">
-                Shop Now
+              <Button as={Link} to="/all-products" variant="warning" size="lg" className="me-3">
+                Shop All Products
               </Button>
               <Button as={Link} to="/register" variant="outline-light" size="lg">
                 Join Us
@@ -159,35 +194,85 @@ const handleWishlistToggle = async (product) => {
         </Container>
       </div>
 
-      {/* Search Results */}
-      {searchQuery && (
-        <Container className="py-4">
-          <h2>Search Results for "{searchQuery}"</h2>
-        </Container>
-      )}
+        {/* Error Alert */}
+        {error && (
+          <Container className="py-4">
+            <Alert variant="danger" dismissible onClose={() => setError(null)}>
+              {error}
+            </Alert>
+          </Container>
+        )}
 
-      {/* All Products (fallback) */}
-      {showAllProductsSection && (
-        <Container className="py-5">
-          <h2 className="h4 fw-bold mb-4">All Products</h2>
-          {products.length === 0 ? (
-            <Alert variant="info">No products available yet.</Alert>
-          ) : (
-            <Row>
-              {products.slice(0, 8).map(product => (
-                <Col key={product.id} lg={3} md={4} sm={6} className="mb-4">
-                  <ProductCard 
-                    product={product}
-                    onAddToCart={handleAddToCart}
-                    onWishlistToggle={handleWishlistToggle}
-                    isInWishlist={isInWishlist(product.id)}
-                  />
-                </Col>
-              ))}
-            </Row>
-          )}
+        {/* Search Results */}
+        {searchQuery && (
+          <Container className="py-4">
+            <h2>Search Results for "{searchQuery}"</h2>
+            {products.length === 0 ? (
+              <p>No products found.</p>
+            ) : (
+              <Row>
+                {products.map(product => (
+                  <Col key={product.id} lg={3} md={6} className="mb-4">
+                    <ProductCard 
+                      product={product}
+                      onAddToCart={handleAddToCart}
+                      onWishlistToggle={handleWishlistToggle}
+                      isInWishlist={isInWishlist(product.id)}
+                      togglingWishlist={togglingWishlist}
+                    />
+                  </Col>
+                ))}
+              </Row>
+            )}
+          </Container>
+        )}
+
+      {/* Featured Products Section */}
+      <Container className="py-5">
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h2 className="h4 fw-bold">Featured Products</h2>
+          <Button as={Link} to="/all-products" variant="outline-success">
+            View All
+          </Button>
+        </div>
+        <Row>
+          {featuredProducts.map(product => (
+            <Col key={product.id} lg={3} md={4} sm={6} className="mb-4">
+              <ProductCard 
+                product={product}
+                onAddToCart={handleAddToCart}
+                onWishlistToggle={handleWishlistToggle}
+                isInWishlist={isInWishlist(product.id)}
+              />
+            </Col>
+          ))}
+        </Row>
+      </Container>
+      
+      {/* Bestselling Products Section */}
+      <div className="bg-light py-5">
+        <Container>
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h2 className="h4 fw-bold">Bestselling Products</h2>
+            <Button as={Link} to="/all-products" variant="outline-success">
+              View All
+            </Button>
+          </div>
+          <Row>
+            {bestsellingProducts.map(product => (
+              <Col key={product.id} lg={3} md={4} sm={6} className="mb-4">
+                <ProductCard 
+                  product={product}
+                  onAddToCart={handleAddToCart}
+                  onWishlistToggle={handleWishlistToggle}
+                  isInWishlist={isInWishlist(product.id)}
+                />
+              </Col>
+            ))}
+          </Row>
         </Container>
-      )}
+      </div>
+
 
       {/* Categories Sections */}
       <Container className="py-5">
@@ -306,7 +391,7 @@ const handleWishlistToggle = async (product) => {
   );
 };
 
-// Product Card Component
+// Product Card Component (remains the same)
 const ProductCard = ({ product, onAddToCart, onWishlistToggle, isInWishlist }) => {
   return (
     <Card className="h-100 product-card shadow-sm">

@@ -298,7 +298,7 @@
 
 // export default CategoryProducts;
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Badge, Button, Spinner, Alert } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart, faShoppingCart, faStar } from '@fortawesome/free-solid-svg-icons';
@@ -306,19 +306,22 @@ import { faHeart as farHeart } from '@fortawesome/free-regular-svg-icons';
 import axios from 'axios';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
+import { useUserAuth } from '../contexts/UserAuthContext';
 import UserLayout from '../layouts/UserLayout';
-
 
 const CategoryProducts = () => {
   const { category } = useParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [wishlistError, setWishlistError] = useState(null);
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
-  
+  const [togglingWishlist, setTogglingWishlist] = useState({});
   const { addToCart } = useCart();
-  const { wishlist, addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const { addToWishlist, removeProductFromWishlist, isInWishlist, error: contextWishlistError, clearError } = useWishlist();
+  const { isAuthenticated } = useUserAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchProducts();
@@ -329,10 +332,8 @@ const CategoryProducts = () => {
       setLoading(true);
       setError(null);
       const response = await axios.get(`/api/products/category/${encodeURIComponent(category)}`);
-      console.log('API Response for CategoryProducts:', response.data); // Debug log
-      setProducts(response.data.products || []);
+      setProducts(response.data.products);
     } catch (err) {
-      console.error('Fetch error in CategoryProducts:', err);
       setError(err.response?.data?.message || 'Failed to fetch products');
     } finally {
       setLoading(false);
@@ -363,34 +364,63 @@ const CategoryProducts = () => {
       bValue = String(bValue || '').toLowerCase();
     }
 
-    return sortOrder === 'asc' ? (aValue > bValue ? 1 : -1) : (aValue < bValue ? 1 : -1);
+    if (sortOrder === 'asc') {
+      return aValue > bValue ? 1 : -1;
+    } else {
+      return aValue < bValue ? 1 : -1;
+    }
   });
 
   const handleAddToCart = async (product) => {
+    if (!isAuthenticated) {
+      setError('Please log in to add items to cart');
+      setTimeout(() => navigate('/login'), 2000);
+      return;
+    }
     try {
       await addToCart(product.id, 1);
+      alert('Product added to cart!');
     } catch (err) {
+      setError('Failed to add to cart');
       console.error('Failed to add to cart:', err);
     }
   };
 
-// src/pages/CategoryProducts.js
+  const handleWishlistToggle = async (product) => {
+    if (!isAuthenticated) {
+      setWishlistError('Please log in to add items to your wishlist');
+      setTimeout(() => navigate('/login'), 2000);
+      return;
+    }
 
-// src/pages/ProductDetail.js
-
-const handleWishlistToggle = async (product) => {
-if (isInWishlist(product.id)) {
-  const item = wishlist.find(w => w.product.id === product.id);
-  if (item) {
-    await removeFromWishlist(item.id);
-  }
-} else {
-  await addToWishlist(product.id);
-}
-};
+    try {
+      setTogglingWishlist(prev => ({ ...prev, [product.id]: true }));
+      clearError();
+      if (isInWishlist(product.id)) {
+        const result = await removeProductFromWishlist(product.id);
+        if (result.success) {
+          alert('Product removed from wishlist!');
+        } else {
+          setWishlistError(result.error || 'Failed to remove from wishlist');
+        }
+      } else {
+        const result = await addToWishlist(product.id);
+        if (result.success) {
+          alert('Product added to wishlist!');
+        } else {
+          setWishlistError(result.error || 'Failed to add to wishlist');
+        }
+      }
+    } catch (err) {
+      setWishlistError('Failed to update wishlist');
+      console.error('Failed to toggle wishlist:', err);
+    } finally {
+      setTogglingWishlist(prev => ({ ...prev, [product.id]: false }));
+    }
+  };
 
   const getCategoryDisplayName = (categoryName) => {
-    return categoryName.charAt(0).toUpperCase() + categoryName.slice(1).replace(/-/, ' ');
+    return categoryName.charAt(0).toUpperCase() + categoryName.slice(1).replace(/-/g, ' ');
   };
 
   if (loading) {
@@ -412,7 +442,7 @@ if (isInWishlist(product.id)) {
     return (
       <UserLayout>
         <Container className="py-5">
-          <Alert variant="danger">
+          <Alert variant="danger" dismissible onClose={() => setError(null)}>
             <Alert.Heading>Error</Alert.Heading>
             <p>{error}</p>
             <Button variant="outline-danger" onClick={fetchProducts}>
@@ -427,6 +457,12 @@ if (isInWishlist(product.id)) {
   return (
     <UserLayout>
       <Container className="py-5">
+        {(wishlistError || contextWishlistError) && (
+          <Alert variant="danger" dismissible onClose={() => { setWishlistError(null); clearError(); }}>
+            {wishlistError || contextWishlistError}
+          </Alert>
+        )}
+
         <div className="mb-4">
           <h1 className="text-center mb-3">
             {getCategoryDisplayName(category)} Products
@@ -502,17 +538,23 @@ if (isInWishlist(product.id)) {
                         size="sm"
                         className="overlay-btn"
                         onClick={() => handleWishlistToggle(product)}
+                        disabled={togglingWishlist[product.id]}
                       >
-                        <FontAwesomeIcon
-                          icon={isInWishlist(product.id) ? faHeart : farHeart}
-                          className={isInWishlist(product.id) ? 'text-danger' : ''}
-                        />
+                        {togglingWishlist[product.id] ? (
+                          <Spinner animation="border" size="sm" />
+                        ) : (
+                          <FontAwesomeIcon
+                            icon={isInWishlist(product.id) ? faHeart : farHeart}
+                            className={isInWishlist(product.id) ? 'text-danger' : ''}
+                          />
+                        )}
                       </Button>
                       <Button
                         variant="outline-light"
                         size="sm"
                         className="overlay-btn"
                         onClick={() => handleAddToCart(product)}
+                        disabled={product.stock === 0}
                       >
                         <FontAwesomeIcon icon={faShoppingCart} />
                       </Button>
@@ -577,6 +619,7 @@ if (isInWishlist(product.id)) {
                         <Button
                           variant={isInWishlist(product.id) ? 'danger' : 'outline-danger'}
                           onClick={() => handleWishlistToggle(product)}
+                          disabled={togglingWishlist[product.id]}
                         >
                           <FontAwesomeIcon
                             icon={isInWishlist(product.id) ? faHeart : farHeart}

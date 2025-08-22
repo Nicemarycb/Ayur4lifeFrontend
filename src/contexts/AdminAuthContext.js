@@ -29,23 +29,20 @@ export const AdminAuthProvider = ({ children }) => {
         return;
       }
 
-      // Set default auth header
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
-      // Verify admin token and get admin info
-      const response = await axios.get('/api/admin/verify');
+      // Verify admin token and get admin info (per-request header)
+      const response = await axios.get('/api/admin/verify', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       if (response.data.isAdmin) {
         setIsAuthenticated(true);
         setIsAdmin(true);
         setAdminUser(response.data.admin);
       } else {
         localStorage.removeItem('adminToken');
-        delete axios.defaults.headers.common['Authorization'];
       }
     } catch (error) {
       console.error('Admin auth check failed:', error);
       localStorage.removeItem('adminToken');
-      delete axios.defaults.headers.common['Authorization'];
     } finally {
       setLoading(false);
     }
@@ -57,7 +54,6 @@ export const AdminAuthProvider = ({ children }) => {
       const { token, admin } = response.data;
 
       localStorage.setItem('adminToken', token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
       setIsAuthenticated(true);
       setIsAdmin(true);
@@ -75,7 +71,6 @@ export const AdminAuthProvider = ({ children }) => {
 
   const adminLogout = () => {
     localStorage.removeItem('adminToken');
-    delete axios.defaults.headers.common['Authorization'];
     setIsAuthenticated(false);
     setIsAdmin(false);
     setAdminUser(null);

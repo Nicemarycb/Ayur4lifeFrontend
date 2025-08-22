@@ -48,23 +48,23 @@ export const CartProvider = ({ children }) => {
       return { success: false, error: 'Please login to add items to cart' };
     }
 
+    const prevCart = [...cart]; // Backup for rollback
+
     try {
       setLoading(true);
       setError(null);
 
       // Optimistic update: Add item to cart locally with a temporary ID
-      const newItem = { id: `temp-${Date.now()}`, productId, quantity, product: { id: productId, price: 0 } }; // Placeholder price
-      setCart(prevCart => [...prevCart, newItem]);
+      const newItem = { id: `temp-${Date.now()}`, productId, quantity, product: { id: productId, price: 0 } }; // Placeholder
+      setCart([...cart, newItem]);
 
       const response = await axios.post('/api/cart/add', { productId, quantity });
-      const updatedCart = response.data.cartItems || [];
-      setCart(updatedCart); // Sync with server response
+      setCart(response.data.cartItems || []); // Sync with full cart from server
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.message || 'Failed to add item to cart';
+      setCart(prevCart); // Rollback
+      const message = error.response?.data?.error || 'Failed to add item to cart';
       setError(message);
-      // Roll back optimistic update on failure
-      setCart(prevCart => prevCart.filter(item => !item.id.startsWith('temp-')));
       return { success: false, error: message };
     } finally {
       setLoading(false);
@@ -73,6 +73,8 @@ export const CartProvider = ({ children }) => {
 
   const updateCartItem = async (itemId, quantity) => {
     if (!isAuthenticated) return;
+
+    const prevCart = [...cart]; // Backup for rollback
 
     try {
       setLoading(true);
@@ -85,13 +87,12 @@ export const CartProvider = ({ children }) => {
       setCart(updatedCart);
 
       const response = await axios.put(`/api/cart/update/${itemId}`, { quantity });
-      setCart(response.data.cartItems || []); // Sync with server response
+      setCart(response.data.cartItems || []); // Sync with full cart from server
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.message || 'Failed to update cart item';
+      setCart(prevCart); // Rollback
+      const message = error.response?.data?.error || 'Failed to update cart item';
       setError(message);
-      // Roll back optimistic update on failure
-      loadCart(); // Re-fetch to restore correct state
       return { success: false, error: message };
     } finally {
       setLoading(false);
@@ -110,7 +111,7 @@ export const CartProvider = ({ children }) => {
       setCart(updatedCart);
 
       const response = await axios.delete(`/api/cart/remove/${itemId}`);
-      setCart(response.data.cartItems || []); // Sync with server response
+      setCart(response.data.cartItems || []); // Sync with updated cartItems from server
       return { success: true };
     } catch (error) {
       const message = error.response?.data?.message || 'Failed to remove item from cart';
