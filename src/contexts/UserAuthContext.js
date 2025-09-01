@@ -71,6 +71,31 @@ const register = async (userData) => {
 
   // Add register, updateProfile, changePassword as needed...
 
+  const updateProfile = async (profileData) => {
+    try {
+      setError(null);
+      const res = await axios.put('/api/auth/profile', profileData);
+      setUser(res.data.user);
+      return { success: true, message: 'Profile updated successfully' };
+    } catch (err) {
+      const message = err.response?.data?.error || 'Failed to update profile';
+      setError(message);
+      return { success: false, error: message };
+    }
+  };
+
+const changePassword = async (passwordData) => {
+    try {
+      setError(null);
+      const res = await axios.put('/api/auth/change-password', passwordData);
+      return { success: true, message: 'Password changed successfully' };
+    } catch (err) {
+      const message = err.response?.data?.error || 'Failed to change password';
+      setError(message);
+      return { success: false, error: message };
+    }
+  };
+
   return (
     <UserAuthContext.Provider value={{
       user,
@@ -79,6 +104,8 @@ const register = async (userData) => {
       login,
       logout,
      register,
+     updateProfile,
+     changePassword,
       isAuthenticated: !!user,
     clearError, 
     }}>

@@ -15,7 +15,7 @@ const AllProductsPage = () => {
     const searchQuery = searchParams.get('search');
     const { isAuthenticated } = useUserAuth();
     const { addToCart } = useCart();
-    const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+    const { addToWishlist, removeFromWishlist, isInWishlist , wishlist } = useWishlist();
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -53,25 +53,26 @@ const AllProductsPage = () => {
             setError('Failed to add to cart.');
         }
     };
-
-    const handleWishlistToggle = async (productId) => {
-        if (!isAuthenticated) {
-            setError('Please log in to add items to your wishlist.');
-            setTimeout(() => navigate('/login'), 2000);
-            return;
+const handleWishlistToggle = async (productId) => {
+    if (!isAuthenticated) {
+        setError('Please log in to add items to your wishlist.');
+        setTimeout(() => navigate('/login'), 2000);
+        return;
+    }
+    try {
+        const existingWishlistItem = wishlist.find(item => item.product.id === productId);
+      
+        if (existingWishlistItem) {
+            await removeFromWishlist(existingWishlistItem.id);
+            alert('Removed from wishlist!');
+        } else {
+            await addToWishlist(productId);
+            alert('Added to wishlist!');
         }
-        try {
-            if (isInWishlist(productId)) {
-                await removeFromWishlist(productId);
-                alert('Removed from wishlist!');
-            } else {
-                await addToWishlist(productId);
-                alert('Added to wishlist!');
-            }
-        } catch (err) {
-            setError('Failed to update wishlist.');
-        }
-    };
+    } catch (err) {
+        setError('Failed to update wishlist.');
+    }
+};
 
     if (loading) {
         return (

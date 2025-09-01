@@ -24,7 +24,7 @@ const Home = () => {
   
   const { isAuthenticated } = useUserAuth();
   const { addToCart } = useCart();
-  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const { addToWishlist, removeFromWishlist, isInWishlist ,wishlist } = useWishlist();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -112,8 +112,11 @@ const handleWishlistToggle = async (productId) => {
 
     try {
       setTogglingWishlist(prev => ({ ...prev, [productId]: true }));
-      if (isInWishlist(productId)) {
-        await removeFromWishlist(productId);
+      
+      const existingWishlistItem = wishlist.find(item => item.product.id === productId);
+
+      if (existingWishlistItem) {
+        await removeFromWishlist(existingWishlistItem.id);
         alert('Removed from wishlist!');
       } else {
         await addToWishlist(productId);

@@ -20,9 +20,12 @@ import {
   faSave,
   faTimes,
   faBoxes,
+  faImage,
+  faVideo,
 } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
 import { useAdminAuth } from "../../contexts/AdminAuthContext";
+import AdminLayout from "../../layouts/AdminLayout";
 
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
@@ -32,6 +35,10 @@ const AdminProducts = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingProduct, setDeletingProduct] = useState(null);
+  const [images, setImages] = useState([]);
+  const [video, setVideo] = useState(null);
+  const [imageManagementProduct, setImageManagementProduct] = useState(null);
+  const [showImageModal, setShowImageModal] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -40,7 +47,6 @@ const AdminProducts = () => {
     category: "",
     stock: "",
     gst: "",
-    images: [],
     features: [],
   });
 
@@ -70,6 +76,23 @@ const AdminProducts = () => {
     }
   };
 
+  // NEW: Function to fetch a single product (used to refresh modal after updates)
+  const fetchSingleProduct = async (productId) => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await axios.get(`/api/products/${productId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      return response.data.product;
+    } catch (err) {
+      console.error('Failed to fetch single product:', err);
+      setError('Failed to refresh product data');
+      return null;
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -85,12 +108,17 @@ const AdminProducts = () => {
     }
   };
 
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files);
-    setFormData((prev) => ({
-      ...prev,
-      images: files,
-    }));
+const handleImageChange = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    setImages((prev) => [...prev, file]); // append instead of overwrite
+  }
+  e.target.value = ""; // reset so user can select again
+};
+
+
+  const handleVideoChange = (e) => {
+    setVideo(e.target.files[0]);
   };
 
   const handleFeatureChange = (index, value) => {
@@ -146,10 +174,14 @@ const AdminProducts = () => {
       formDataToSend.append("gst", formData.gst || 0);
       formDataToSend.append("features", JSON.stringify(formData.features || []));
 
-      if (formData.images && formData.images.length > 0) {
-        Array.from(formData.images).forEach((file) => {
-          formDataToSend.append("images", file);
-        });
+      // Append each image file
+      images.forEach((image) => {
+        formDataToSend.append("images", image);
+      });
+
+      // Append video if exists
+      if (video) {
+        formDataToSend.append("video", video);
       }
 
       const token = localStorage.getItem('adminToken');
@@ -182,20 +214,24 @@ const AdminProducts = () => {
     }
   };
 
-  const handleEdit = (product) => {
-    setEditingProduct(product);
-    setFormData({
-      name: product.name || "",
-      description: product.description || "",
-      price: product.price || "",
-      category: product.category || "",
-      stock: product.stock || "",
-      gst: product.gst || "",
-      images: [],
-      features: product.features || [],
-    });
-    setShowModal(true);
-  };
+const handleEdit = (product) => {
+  setEditingProduct(product);
+  setFormData({
+    name: product.name || "",
+    description: product.description || "",
+    price: product.price || "",
+    category: product.category || "",
+    stock: product.stock || "",
+    gst: product.gst || "",
+    features: product.features || [],
+  });
+
+  // Preload media
+  setImages(product.images || []);
+  setVideo(product.video || null);
+
+  setShowModal(true);
+};
 
   const handleDelete = async () => {
     try {
@@ -221,10 +257,127 @@ const AdminProducts = () => {
       category: "",
       stock: "",
       gst: "",
-      images: [],
       features: [],
     });
     setFormErrors({});
+    setImages([]);
+    setVideo(null);
+  };
+
+  const handleImageUpdate = async (productId, imageIndex, imageFile) => {
+    try {
+      const formData = new FormData();
+      formData.append('image', imageFile);
+      
+      const token = localStorage.getItem('adminToken');
+      const response = await axios.put(
+        `/api/products/admin/products/${productId}/image/${imageIndex}`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      if (response.data.success) {
+        // UPDATED: Refresh modal state with updated product data
+        const updatedProduct = await fetchSingleProduct(productId);
+        if (updatedProduct) {
+          setImageManagementProduct(updatedProduct);
+        }
+        fetchProducts(); // Also refresh the main list
+      }
+    } catch (error) {
+      console.error('Failed to update image:', error);
+      setError('Failed to update image');
+    }
+  };
+
+  const handleImageRemove = async (productId, imageIndex) => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await axios.delete(
+        `/api/products/admin/products/${productId}/image/${imageIndex}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      if (response.data.success) {
+        // UPDATED: Refresh modal state with updated product data
+        const updatedProduct = await fetchSingleProduct(productId);
+        if (updatedProduct) {
+          setImageManagementProduct(updatedProduct);
+        }
+        fetchProducts(); // Also refresh the main list
+      }
+    } catch (error) {
+      console.error('Failed to remove image:', error);
+      setError('Failed to remove image');
+    }
+  };
+
+  // NEW: Handle video update
+  const handleVideoUpdate = async (productId, videoFile) => {
+    try {
+      const formData = new FormData();
+      formData.append('video', videoFile);
+      
+      const token = localStorage.getItem('adminToken');
+      const response = await axios.put(
+        `/api/products/admin/products/${productId}/video`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      if (response.data.success) {
+        // Refresh modal state with updated product data
+        const updatedProduct = await fetchSingleProduct(productId);
+        if (updatedProduct) {
+          setImageManagementProduct(updatedProduct);
+        }
+        fetchProducts(); // Also refresh the main list
+      }
+    } catch (error) {
+      console.error('Failed to update video:', error);
+      setError('Failed to update video');
+    }
+  };
+
+  // NEW: Handle video remove
+  const handleVideoRemove = async (productId) => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await axios.delete(
+        `/api/products/admin/products/${productId}/video`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      if (response.data.success) {
+        // Refresh modal state with updated product data
+        const updatedProduct = await fetchSingleProduct(productId);
+        if (updatedProduct) {
+          setImageManagementProduct(updatedProduct);
+        }
+        fetchProducts(); // Also refresh the main list
+      }
+    } catch (error) {
+      console.error('Failed to remove video:', error);
+      setError('Failed to remove video');
+    }
   };
 
   const openAddModal = () => {
@@ -233,18 +386,26 @@ const AdminProducts = () => {
     setShowModal(true);
   };
 
+  const openImageManagement = (product) => {
+    setImageManagementProduct(product);
+    setShowImageModal(true);
+  };
+
   if (loading) {
     return (
-      <Container className="py-5">
-        <div className="text-center">
-          <Spinner animation="border" role="status" className="text-primary" />
-          <p className="mt-3">Loading products...</p>
-        </div>
-      </Container>
+      <AdminLayout>
+        <Container className="py-5">
+          <div className="text-center">
+            <Spinner animation="border" role="status" className="text-primary" />
+            <p className="mt-3">Loading products...</p>
+          </div>
+        </Container>
+      </AdminLayout>
     );
   }
 
-  return (
+return (
+  <AdminLayout>
     <Container className="py-5">
       <div className="mb-4">
         <Row className="align-items-center">
@@ -301,6 +462,7 @@ const AdminProducts = () => {
                     <th>Price</th>
                     <th>Stock</th>
                     <th>Status</th>
+                    <th>Media</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -318,6 +480,11 @@ const AdminProducts = () => {
                           }}
                           className="rounded"
                         />
+                        {product.images && product.images.length > 1 && (
+                          <Badge bg="info" className="ms-1">
+                            +{product.images.length - 1}
+                          </Badge>
+                        )}
                       </td>
                       <td>
                         <strong>{product.name}</strong>
@@ -330,9 +497,7 @@ const AdminProducts = () => {
                         <Badge bg="secondary">{product.category}</Badge>
                       </td>
                       <td>
-                        <strong className="text-primary">
-                          ₹{product.price}
-                        </strong>
+                        <strong className="text-primary">₹{product.price}</strong>
                       </td>
                       <td>
                         <span
@@ -353,6 +518,23 @@ const AdminProducts = () => {
                         ) : (
                           <Badge bg="danger">Out of Stock</Badge>
                         )}
+                      </td>
+                      <td>
+                        <div className="d-flex gap-1">
+                          {product.video && (
+                            <Badge bg="info">
+                              <FontAwesomeIcon icon={faVideo} className="me-1" />
+                              Video
+                            </Badge>
+                          )}
+                          <Button
+                            variant="outline-secondary"
+                            size="sm"
+                            onClick={() => openImageManagement(product)}
+                          >
+                            <FontAwesomeIcon icon={faImage} />
+                          </Button>
+                        </div>
                       </td>
                       <td>
                         <div className="d-flex gap-1">
@@ -493,17 +675,82 @@ const AdminProducts = () => {
               </Col>
             </Row>
 
-            <Form.Group className="mb-3">
-              <Form.Label>Product Images</Form.Label>
+            {/* Product Images Upload + Preview */}
+          <Form.Group className="mb-3">
+  <Form.Label>Product Images (Max 5)</Form.Label>
+  <Form.Control
+    type="file"
+    accept="image/*"
+    onChange={handleImageChange}
+    name="images"
+  />
+  <Form.Text className="text-muted">
+    {editingProduct
+      ? "Select new images to replace existing ones"
+      : "Select images one by one (max 5)"}
+  </Form.Text>
+</Form.Group>
+
+
+            {images.length > 0 && (
+              <div className="d-flex flex-wrap gap-2 mt-2">
+                {images.map((img, index) => (
+                  <div key={index} className="position-relative">
+                    <img
+                      src={typeof img === "string" ? img : URL.createObjectURL(img)}
+                      alt="preview"
+                      style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 4 }}
+                    />
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      className="position-absolute top-0 end-0"
+                      onClick={() => setImages(prev => prev.filter((_, i) => i !== index))}
+                    >
+                      ×
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Product Video Upload + Preview */}
+            <Form.Group className="mb-3 mt-3">
+              <Form.Label>Product Video (Optional)</Form.Label>
               <Form.Control
                 type="file"
-                multiple
-                accept="image/*"
-                onChange={handleImageChange}
+                accept="video/*"
+                onChange={handleVideoChange}
+                name="video"
               />
+              <Form.Text className="text-muted">
+                {editingProduct && editingProduct.video
+                  ? "Select a new video to replace the existing one"
+                  : "Add a product video (optional)"}
+              </Form.Text>
             </Form.Group>
 
-            <Form.Group className="mb-3">
+            {video && (
+              <div className="mt-2 position-relative">
+                <video width="160" height="90" controls>
+                  <source
+                    src={typeof video === "string" ? video : URL.createObjectURL(video)}
+                    type="video/mp4"
+                  />
+                </video>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  className="position-absolute top-0 end-0"
+                  onClick={() => setVideo(null)}
+                >
+                  ×
+                </Button>
+              </div>
+            )}
+
+            {/* Features */}
+            <Form.Group className="mb-3 mt-3">
               <Form.Label>Features</Form.Label>
               {formData.features.map((feature, index) => (
                 <div key={index} className="d-flex gap-2 mb-2">
@@ -537,12 +784,118 @@ const AdminProducts = () => {
             <Button variant="secondary" onClick={() => setShowModal(false)}>
               Cancel
             </Button>
-            <Button variant="primary" type="submit">
-              <FontAwesomeIcon icon={faSave} className="me-2" />
-              {editingProduct ? "Update Product" : "Add Product"}
+            <Button variant="primary" type="submit" disabled={loading}>
+              {loading ? (
+                <>
+                  <Spinner animation="border" size="sm" className="me-2" />
+                  {editingProduct ? "Updating..." : "Adding..."}
+                </>
+              ) : (
+                <>
+                  <FontAwesomeIcon icon={faSave} className="me-2" />
+                  {editingProduct ? "Update Product" : "Add Product"}
+                </>
+              )}
             </Button>
           </Modal.Footer>
         </Form>
+      </Modal>
+
+      {/* Media Management Modal (Images + Video) */}
+      <Modal show={showImageModal} onHide={() => setShowImageModal(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Manage Media for {imageManagementProduct?.name}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {imageManagementProduct && (
+            <>
+              {/* Images Section */}
+              <h5 className="mb-3">Images</h5>
+              <Row>
+                {imageManagementProduct.images?.map((image, index) => (
+                  <Col md={4} key={index} className="mb-3">
+                    <Card>
+                      <Card.Img variant="top" src={image} />
+                      <Card.Body className="p-2">
+                        <div className="d-grid gap-1">
+                          <label className="btn btn-sm btn-primary">
+                            Replace
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="d-none"
+                              onChange={(e) => {
+                                if (e.target.files[0]) {
+                                  handleImageUpdate(imageManagementProduct.id, index, e.target.files[0]);
+                                }
+                              }}
+                            />
+                          </label>
+                          <Button
+                            variant="outline-danger"
+                            size="sm"
+                            onClick={() => handleImageRemove(imageManagementProduct.id, index)}
+                            disabled={imageManagementProduct.images.length <= 1}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                ))}
+              </Row>
+
+              {/* Video Section */}
+              <h5 className="mt-4 mb-3">Video</h5>
+              {imageManagementProduct.video ? (
+                <Card>
+                  <Card.Body>
+                    <div className="text-center mb-3">
+                      <FontAwesomeIcon icon={faVideo} size="3x" className="text-info" />
+                      <p className="mt-2">
+                        Current Video:{" "}
+                        <a href={imageManagementProduct.video} target="_blank" rel="noopener noreferrer">
+                          View Video
+                        </a>
+                      </p>
+                    </div>
+                    <div className="d-grid gap-2">
+                      <label className="btn btn-primary">
+                        Replace Video
+                        <input
+                          type="file"
+                          accept="video/*"
+                          className="d-none"
+                          onChange={(e) => {
+                            if (e.target.files[0]) {
+                              handleVideoUpdate(imageManagementProduct.id, e.target.files[0]);
+                            }
+                          }}
+                        />
+                      </label>
+                      <Button
+                        variant="outline-danger"
+                        onClick={() => handleVideoRemove(imageManagementProduct.id)}
+                      >
+                        Remove Video
+                      </Button>
+                    </div>
+                  </Card.Body>
+                </Card>
+              ) : (
+                <Alert variant="info">
+                  No video uploaded. You can add one in the edit product modal or replace here.
+                </Alert>
+              )}
+            </>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowImageModal(false)}>
+            Close
+          </Button>
+        </Modal.Footer>
       </Modal>
 
       {/* Delete Modal */}
@@ -568,7 +921,8 @@ const AdminProducts = () => {
         </Modal.Footer>
       </Modal>
     </Container>
-  );
-};
+  </AdminLayout>
+);
+}
 
 export default AdminProducts;

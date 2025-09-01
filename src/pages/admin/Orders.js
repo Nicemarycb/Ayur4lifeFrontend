@@ -433,8 +433,9 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Alert, Spinner, Badge, Form, Modal, Table } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye, faEdit, faFilter, faSearch, faShoppingBag } from '@fortawesome/free-solid-svg-icons';
+import { faEye, faEdit, faFilter, faSearch, faShoppingBag, faTrash } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
+import AdminLayout from '../../layouts/AdminLayout';
 
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -548,6 +549,17 @@ const AdminOrders = () => {
       setError(err.response?.data?.message || 'Failed to fetch order details');
     }
   };
+  const handleDeleteOrder = async (orderId) => {
+  if (!window.confirm("Are you sure you want to delete this order?")) return;
+
+  try {
+    await axios.delete(`/api/admin/orders/${orderId}`, getAuthConfig());
+    setOrders(orders.filter(order => order.id !== orderId));
+  } catch (err) {
+    setError(err.response?.data?.message || 'Failed to delete order');
+  }
+};
+
 
   const getStatusBadge = (status) => {
     const statusConfig = {
@@ -590,6 +602,7 @@ const AdminOrders = () => {
   }
 
   return (
+    <AdminLayout>
     <Container className="py-5">
       <div className="mb-4">
         <h1 className="mb-2">Manage Orders</h1>
@@ -665,11 +678,19 @@ const AdminOrders = () => {
                 />
               </Form.Group>
             </Col>
-            <Col md={2} className="d-flex align-items-end">
-              <Button variant="outline-secondary" onClick={clearFilters} className="w-100">
-                Clear Filters
-              </Button>
-            </Col>
+           <Col md={3}>
+  <Form.Group className="mb-3">
+    <Form.Label>&nbsp;</Form.Label>
+    <Button
+      variant="outline-secondary"
+      onClick={clearFilters}
+      className="w-100"
+    >
+      Clear Filters
+    </Button>
+  </Form.Group>
+</Col>
+
           </Row>
         </Card.Body>
       </Card>
@@ -768,6 +789,16 @@ const AdminOrders = () => {
                           <FontAwesomeIcon icon={faEye} className="me-1" />
                           View
                         </Button>
+                        
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                       onClick={() => handleDeleteOrder(order.id)}
+                      >
+                         <FontAwesomeIcon icon={faTrash} className="me-2" />
+                      Delete
+                      </Button>
+
                       </td>
                     </tr>
                   ))}
@@ -899,6 +930,7 @@ const AdminOrders = () => {
         </Modal.Footer>
       </Modal>
     </Container>
+    </AdminLayout>
   );
 };
 

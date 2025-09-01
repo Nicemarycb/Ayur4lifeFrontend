@@ -31,7 +31,7 @@
 //     try {
 //       setLoading(true);
 //       setError(null);
-      
+
 //       const params = new URLSearchParams();
 //       if (filters.search) params.append('search', filters.search);
 //       if (filters.role) params.append('role', filters.role);
@@ -61,7 +61,7 @@
 //         axios.get(`/api/admin/users/${userId}`, getAuthConfig()),
 //         axios.get(`/api/admin/users/${userId}/orders`, getAuthConfig())
 //       ]);
-      
+
 //       setSelectedUser(userResponse.data);
 //       setUserOrders(ordersResponse.data);
 //       setShowUserModal(true);
@@ -83,7 +83,7 @@
 //       'user': { variant: 'primary', text: 'User' },
 //       'admin': { variant: 'danger', text: 'Admin' }
 //     };
-    
+
 //     const config = roleConfig[role] || { variant: 'secondary', text: role };
 //     return <Badge bg={config.variant}>{config.text}</Badge>;
 //   };
@@ -94,7 +94,7 @@
 //       'inactive': { variant: 'warning', text: 'Inactive' },
 //       'suspended': { variant: 'danger', text: 'Suspended' }
 //     };
-    
+
 //     const config = statusConfig[status] || { variant: 'secondary', text: status };
 //     return <Badge bg={config.variant}>{config.text}</Badge>;
 //   };
@@ -199,7 +199,7 @@
 //               <FontAwesomeIcon icon={faUsers} size="4x" className="text-muted mb-3" />
 //               <h4>No users found</h4>
 //               <p className="text-muted">
-//                 {Object.values(filters).some(f => f) 
+//                 {Object.values(filters).some(f => f)
 //                   ? 'Try adjusting your filters to see more users.'
 //                   : 'Users will appear here once they register.'
 //                 }
@@ -411,13 +411,33 @@
 
 // export default AdminUsers;
 
-
 // Users.js - Fixed version with all issues addressed
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Alert, Spinner, Badge, Form, Modal, Table } from 'react-bootstrap';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUsers, faEye, faFilter, faSearch, faUser, faShoppingBag } from '@fortawesome/free-solid-svg-icons';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Button,
+  Alert,
+  Spinner,
+  Badge,
+  Form,
+  Modal,
+  Table,
+} from "react-bootstrap";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faUsers,
+  faEye,
+  faFilter,
+  faTrash,
+  faSearch,
+  faUser,
+  faShoppingBag,
+} from "@fortawesome/free-solid-svg-icons";
+import axios from "axios";
+import AdminLayout from "../../layouts/AdminLayout";
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
@@ -429,9 +449,9 @@ const AdminUsers = () => {
   const [userOrders, setUserOrders] = useState([]);
 
   const [filters, setFilters] = useState({
-    search: '',
-    role: '',
-    status: ''
+    search: "",
+    role: "",
+    status: "",
   });
 
   useEffect(() => {
@@ -443,57 +463,63 @@ const AdminUsers = () => {
   }, [users, filters]);
 
   const getAuthConfig = () => {
-    const token = localStorage.getItem('adminToken');
+    const token = localStorage.getItem("adminToken");
     return { headers: { Authorization: `Bearer ${token}` } };
   };
 
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const response = await axios.get('/api/admin/users', getAuthConfig());
-      setUsers(response.data.users || response.data);
+const fetchUsers = async () => {
+  try {
+    setLoading(true);
+    setError(null);
 
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch users');
-    } finally {
-      setLoading(false);
-    }
-  };
+    const response = await axios.get("/api/admin/users", getAuthConfig());
+    const usersData = (response.data.users || response.data).map((u) => ({
+      ...u,
+      status: u.status || "active", // ✅ default status
+    }));
+
+    setUsers(usersData);
+  } catch (err) {
+    setError(err.response?.data?.message || "Failed to fetch users");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const filterUsers = () => {
     let result = [...users];
-    
+
     // Apply search filter
     if (filters.search) {
       const searchTerm = filters.search.toLowerCase();
-      result = result.filter(user => 
-        (user.firstName && user.firstName.toLowerCase().includes(searchTerm)) ||
-        (user.lastName && user.lastName.toLowerCase().includes(searchTerm)) ||
-        (user.email && user.email.toLowerCase().includes(searchTerm)) ||
-        (user.phone && user.phone.toLowerCase().includes(searchTerm))
+      result = result.filter(
+        (user) =>
+          (user.firstName &&
+            user.firstName.toLowerCase().includes(searchTerm)) ||
+          (user.lastName && user.lastName.toLowerCase().includes(searchTerm)) ||
+          (user.email && user.email.toLowerCase().includes(searchTerm)) ||
+          (user.phone && user.phone.toLowerCase().includes(searchTerm))
       );
     }
-    
+
     // Apply role filter
     if (filters.role) {
-      result = result.filter(user => user.role === filters.role);
+      result = result.filter((user) => user.role === filters.role);
     }
-    
+
     // Apply status filter
     if (filters.status) {
-      result = result.filter(user => user.status === filters.status);
+      result = result.filter((user) => user.status === filters.status);
     }
-    
+
     setFilteredUsers(result);
   };
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -501,61 +527,77 @@ const AdminUsers = () => {
     try {
       const [userResponse, ordersResponse] = await Promise.all([
         axios.get(`/api/admin/users/${userId}`, getAuthConfig()),
-        axios.get(`/api/admin/users/${userId}/orders`, getAuthConfig())
+        axios.get(`/api/admin/users/${userId}/orders`, getAuthConfig()),
       ]);
-      
+
       setSelectedUser(userResponse.data);
       setUserOrders(ordersResponse.data);
       setShowUserModal(true);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch user details');
+      setError(err.response?.data?.message || "Failed to fetch user details");
+    }
+  };
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm("Are you sure you want to delete this user?")) return;
+
+    try {
+      await axios.delete(`/api/admin/users/${userId}`, getAuthConfig());
+      setUsers(users.filter((user) => user.id !== userId));
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to delete user");
     }
   };
 
   const clearFilters = () => {
     setFilters({
-      search: '',
-      role: '',
-      status: ''
+      search: "",
+      role: "",
+      status: "",
     });
   };
 
   const getRoleBadge = (role) => {
     const roleConfig = {
-      'user': { variant: 'primary', text: 'User' },
-      'admin': { variant: 'danger', text: 'Admin' }
+      user: { variant: "primary", text: "User" },
+      admin: { variant: "danger", text: "Admin" },
     };
-    
-    const config = roleConfig[role] || { variant: 'secondary', text: role };
+
+    const config = roleConfig[role] || { variant: "secondary", text: role };
     return <Badge bg={config.variant}>{config.text}</Badge>;
   };
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      'active': { variant: 'success', text: 'Active' },
-      'inactive': { variant: 'warning', text: 'Inactive' },
-      'suspended': { variant: 'danger', text: 'Suspended' }
+      active: { variant: "success", text: "Active" },
+      inactive: { variant: "warning", text: "Inactive" },
+      suspended: { variant: "danger", text: "Suspended" },
     };
-    
-    const config = statusConfig[status] || { variant: 'secondary', text: status || 'Active' };
+
+    const config = statusConfig[status] || {
+      variant: "secondary",
+      text: status || "Active",
+    };
     return <Badge bg={config.variant}>{config.text}</Badge>;
   };
 
   const getOrderStatusBadge = (status) => {
     const statusConfig = {
-      'pending': { variant: 'warning', text: 'Pending' },
-      'confirmed': { variant: 'info', text: 'Confirmed' },
-      'shipped': { variant: 'primary', text: 'Shipped' },
-      'delivered': { variant: 'success', text: 'Delivered' },
-      'cancelled': { variant: 'danger', text: 'Cancelled' }
+      pending: { variant: "warning", text: "Pending" },
+      confirmed: { variant: "info", text: "Confirmed" },
+      shipped: { variant: "primary", text: "Shipped" },
+      delivered: { variant: "success", text: "Delivered" },
+      cancelled: { variant: "danger", text: "Cancelled" },
     };
-    
-    const config = statusConfig[status] || { variant: 'secondary', text: status };
+
+    const config = statusConfig[status] || {
+      variant: "secondary",
+      text: status,
+    };
     return <Badge bg={config.variant}>{config.text}</Badge>;
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString();
   };
 
@@ -573,16 +615,20 @@ const AdminUsers = () => {
   }
 
   return (
+    <AdminLayout>
     <Container className="py-5">
       <div className="mb-4">
         <h1 className="mb-2">Manage Users</h1>
-        <p className="text-muted">
-          Total Users: {filteredUsers.length}
-        </p>
+        <p className="text-muted">Total Users: {filteredUsers.length}</p>
       </div>
 
       {error && (
-        <Alert variant="danger" className="mb-4" dismissible onClose={() => setError(null)}>
+        <Alert
+          variant="danger"
+          className="mb-4"
+          dismissible
+          onClose={() => setError(null)}
+        >
           {error}
         </Alert>
       )}
@@ -638,11 +684,19 @@ const AdminUsers = () => {
                 </Form.Select>
               </Form.Group>
             </Col>
-            <Col md={2} className="d-flex align-items-end">
-              <Button variant="outline-secondary" onClick={clearFilters} className="w-100">
-                Clear Filters
-              </Button>
-            </Col>
+            <Col md={3}>
+  <Form.Group className="mb-3">
+    
+    <Button
+      variant="outline-secondary"
+      onClick={clearFilters}
+      className="w-100"
+    >
+      Clear Filters
+    </Button>
+  </Form.Group>
+</Col>
+
           </Row>
         </Card.Body>
       </Card>
@@ -652,13 +706,16 @@ const AdminUsers = () => {
         <Card.Body>
           {filteredUsers.length === 0 ? (
             <div className="text-center py-5">
-              <FontAwesomeIcon icon={faUsers} size="4x" className="text-muted mb-3" />
+              <FontAwesomeIcon
+                icon={faUsers}
+                size="4x"
+                className="text-muted mb-3"
+              />
               <h4>No users found</h4>
               <p className="text-muted">
-                {Object.values(filters).some(f => f) 
-                  ? 'Try adjusting your filters to see more users.'
-                  : 'Users will appear here once they register.'
-                }
+                {Object.values(filters).some((f) => f)
+                  ? "Try adjusting your filters to see more users."
+                  : "Users will appear here once they register."}
               </p>
             </div>
           ) : (
@@ -680,11 +737,18 @@ const AdminUsers = () => {
                     <tr key={user.id}>
                       <td>
                         <div>
-                          <strong>{user.firstName} {user.lastName}</strong>
+                          <strong>
+                            {user.firstName} {user.lastName}
+                          </strong>
                           <br />
                           <small className="text-muted">
-                            {user.gender && `${user.gender.charAt(0).toUpperCase() + user.gender.slice(1)}`}
-                            {user.dateOfBirth && ` • ${formatDate(user.dateOfBirth)}`}
+                            {user.gender &&
+                              `${
+                                user.gender.charAt(0).toUpperCase() +
+                                user.gender.slice(1)
+                              }`}
+                            {user.dateOfBirth &&
+                              ` • ${formatDate(user.dateOfBirth)}`}
                           </small>
                         </div>
                       </td>
@@ -694,22 +758,21 @@ const AdminUsers = () => {
                           <small className="text-muted">{user.phone}</small>
                         </div>
                       </td>
-                      <td>
-                        {getRoleBadge(user.role)}
-                      </td>
-                      <td>
-                        {getStatusBadge(user.status)}
-                      </td>
+                      <td>{getRoleBadge(user.role)}</td>
+                      <td>{getStatusBadge(user.status)}</td>
                       <td>
                         {formatDate(user.createdAt)}
                         <br />
                         <small className="text-muted">
-                          {user.createdAt && new Date(user.createdAt).toLocaleTimeString()}
+                          {user.createdAt &&
+                            new Date(user.createdAt).toLocaleTimeString()}
                         </small>
                       </td>
                       <td>
                         <div className="text-center">
-                          <strong className="text-primary">{user.orderCount || 0}</strong>
+                          <strong className="text-primary">
+                            {user.orderCount}
+                          </strong>
                           <br />
                           <small className="text-muted">orders</small>
                         </div>
@@ -723,6 +786,14 @@ const AdminUsers = () => {
                           <FontAwesomeIcon icon={faEye} className="me-1" />
                           View
                         </Button>
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          onClick={() => handleDeleteUser(user.id)}
+                        >
+                          <FontAwesomeIcon icon={faTrash} className="me-1" />
+                          Delete
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -734,7 +805,11 @@ const AdminUsers = () => {
       </Card>
 
       {/* User Detail Modal */}
-      <Modal show={showUserModal} onHide={() => setShowUserModal(false)} size="lg">
+      <Modal
+        show={showUserModal}
+        onHide={() => setShowUserModal(false)}
+        size="lg"
+      >
         <Modal.Header closeButton>
           <Modal.Title>
             User Details - {selectedUser?.firstName} {selectedUser?.lastName}
@@ -747,18 +822,44 @@ const AdminUsers = () => {
               <Row className="mb-4">
                 <Col md={6}>
                   <h6>Personal Information</h6>
-                  <p><strong>Name:</strong> {selectedUser.firstName} {selectedUser.lastName}</p>
-                  <p><strong>Email:</strong> {selectedUser.email}</p>
-                  <p><strong>Phone:</strong> {selectedUser.phone}</p>
-                  <p><strong>Gender:</strong> {selectedUser.gender || 'Not specified'}</p>
-                  <p><strong>Date of Birth:</strong> {selectedUser.dateOfBirth ? formatDate(selectedUser.dateOfBirth) : 'Not specified'}</p>
+                  <p>
+                    <strong>Name:</strong> {selectedUser.firstName}{" "}
+                    {selectedUser.lastName}
+                  </p>
+                  <p>
+                    <strong>Email:</strong> {selectedUser.email}
+                  </p>
+                  <p>
+                    <strong>Phone:</strong> {selectedUser.phone}
+                  </p>
+                  <p>
+                    <strong>Gender:</strong>{" "}
+                    {selectedUser.gender || "Not specified"}
+                  </p>
+                  <p>
+                    <strong>Date of Birth:</strong>{" "}
+                    {selectedUser.dateOfBirth
+                      ? formatDate(selectedUser.dateOfBirth)
+                      : "Not specified"}
+                  </p>
                 </Col>
                 <Col md={6}>
                   <h6>Account Information</h6>
-                  <p><strong>Role:</strong> {getRoleBadge(selectedUser.role)}</p>
-                  <p><strong>Status:</strong> {getStatusBadge(selectedUser.status)}</p>
-                  <p><strong>Joined:</strong> {formatDate(selectedUser.createdAt)}</p>
-                  <p><strong>Last Updated:</strong> {formatDate(selectedUser.updatedAt)}</p>
+                  <p>
+                    <strong>Role:</strong> {getRoleBadge(selectedUser.role)}
+                  </p>
+                  <p>
+                    <strong>Status:</strong>{" "}
+                    {getStatusBadge(selectedUser.status)}
+                  </p>
+                  <p>
+                    <strong>Joined:</strong>{" "}
+                    {formatDate(selectedUser.createdAt)}
+                  </p>
+                  <p>
+                    <strong>Last Updated:</strong>{" "}
+                    {formatDate(selectedUser.updatedAt)}
+                  </p>
                 </Col>
               </Row>
 
@@ -768,7 +869,8 @@ const AdminUsers = () => {
                   <h6>Address Information</h6>
                   <p className="mb-1">{selectedUser.address.street}</p>
                   <p className="mb-1">
-                    {selectedUser.address.city}, {selectedUser.address.state} {selectedUser.address.zipCode}
+                    {selectedUser.address.city}, {selectedUser.address.state}{" "}
+                    {selectedUser.address.zipCode}
                   </p>
                 </div>
               )}
@@ -786,7 +888,14 @@ const AdminUsers = () => {
                   <Col md={3}>
                     <div className="text-center">
                       <h4 className="text-success">
-                        ₹{userOrders.reduce((sum, order) => sum + (order.finalAmount || order.total || 0), 0).toFixed(2)}
+                        ₹
+                        {userOrders
+                          .reduce(
+                            (sum, order) =>
+                              sum + (order.finalAmount || order.total || 0),
+                            0
+                          )
+                          .toFixed(2)}
                       </h4>
                       <small className="text-muted">Total Spent</small>
                     </div>
@@ -794,7 +903,11 @@ const AdminUsers = () => {
                   <Col md={3}>
                     <div className="text-center">
                       <h4 className="text-info">
-                        {userOrders.filter(order => order.status === 'delivered').length}
+                        {
+                          userOrders.filter(
+                            (order) => order.status === "delivered"
+                          ).length
+                        }
                       </h4>
                       <small className="text-muted">Delivered</small>
                     </div>
@@ -802,7 +915,11 @@ const AdminUsers = () => {
                   <Col md={3}>
                     <div className="text-center">
                       <h4 className="text-warning">
-                        {userOrders.filter(order => order.status === 'pending').length}
+                        {
+                          userOrders.filter(
+                            (order) => order.status === "pending"
+                          ).length
+                        }
                       </h4>
                       <small className="text-muted">Pending</small>
                     </div>
@@ -835,21 +952,27 @@ const AdminUsers = () => {
                             </td>
                             <td>{formatDate(order.createdAt)}</td>
                             <td>
-                              <strong className="text-primary">₹{(order.finalAmount || order.total || 0).toFixed(2)}</strong>
+                              <strong className="text-primary">
+                                ₹
+                                {(
+                                  order.finalAmount ||
+                                  order.total ||
+                                  0
+                                ).toFixed(2)}
+                              </strong>
                             </td>
-                            <td>
-                              {getOrderStatusBadge(order.status)}
-                            </td>
-                            <td>
-                              {order.items && order.items.slice(0, 2).map((item, idx) => (
-                                <div key={idx}>
-                                  <small>{item.productName} × {item.quantity}</small>
-                                </div>
-                              ))}
-                              {order.items && order.items.length > 2 && (
-                                <small>+{order.items.length - 2} more items</small>
-                              )}
-                            </td>
+                            <td>{getOrderStatusBadge(order.status)}</td>
+                           <td>
+  {order.items &&
+    order.items.map((item, idx) => (
+      <div key={idx}>
+        <small>
+          {item.productName} × {item.quantity}
+        </small>
+      </div>
+    ))}
+</td>
+
                           </tr>
                         ))}
                       </tbody>
@@ -867,6 +990,7 @@ const AdminUsers = () => {
         </Modal.Footer>
       </Modal>
     </Container>
+    </AdminLayout>
   );
 };
 

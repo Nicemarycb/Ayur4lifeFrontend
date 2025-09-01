@@ -8,14 +8,16 @@ import {
   faStar, 
   faArrowLeft,
   faMinus,
-  faPlus
+  faPlus,
+  faVideo,
+  faPlayCircle
 } from '@fortawesome/free-solid-svg-icons';
 import { faHeart as farHeart } from '@fortawesome/free-regular-svg-icons';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
 import UserLayout from '../layouts/UserLayout';
 import { useUserAuth } from '../contexts/UserAuthContext';
-
+import './ProductDetail.css'; // We'll create this CSS file
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -24,7 +26,8 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
-  const [selectedImage, setSelectedImage] = useState(0);
+  const [selectedMedia, setSelectedMedia] = useState(0);
+  const [mediaItems, setMediaItems] = useState([]);
   
   const { isAuthenticated } = useUserAuth();
   const { addToCart } = useCart();
@@ -39,9 +42,27 @@ const ProductDetail = () => {
       setLoading(true);
       const response = await fetch(`/api/products/${id}`);
       const data = await response.json();
-      console.log('API Response for ProductDetail:', data); // Debug log
+      console.log('API Response for ProductDetail:', data);
       if (response.ok) {
         setProduct(data.product);
+        
+        // Prepare media items (images + video)
+        const media = [];
+        if (data.product.images && data.product.images.length > 0) {
+          data.product.images.forEach(img => {
+            media.push({ type: 'image', url: img });
+          });
+        } else {
+          // Fallback if no images
+          media.push({ type: 'image', url: 'https://placehold.co/500x500?text=Product+Image' });
+        }
+        
+        // Add video if available
+        if (data.product.video) {
+  media.push({ type: 'video', url: data.product.video });
+}
+        
+        setMediaItems(media);
       } else {
         setError(data.message || 'Product not found');
       }
@@ -71,22 +92,19 @@ const ProductDetail = () => {
     }
   };
 
- // src/pages/ProductDetail.js
+  const handleWishlistToggle = async () => {
+    if (!product) return;
 
-// src/pages/ProductDetail.js
-
-const handleWishlistToggle = async () => {
-  if (!product) return; // Guard clause if product is not loaded
-
-  if (isInWishlist(product.id)) {
-    const item = wishlist.find(w => w.product.id === product.id);
-    if (item) {
-      await removeFromWishlist(item.id); // Use wishlistItemId
+    if (isInWishlist(product.id)) {
+      const item = wishlist.find(w => w.product.id === product.id);
+      if (item) {
+        await removeFromWishlist(item.id);
+      }
+    } else {
+      await addToWishlist(product.id);
     }
-  } else {
-    await addToWishlist(product.id);
-  }
-};
+  };
+
   const calculateGST = (price) => {
     return price * 0.18;
   };
@@ -139,14 +157,6 @@ const handleWishlistToggle = async () => {
     );
   }
 
-  const fallbackUrl = 'https://placehold.co/500x500?text=Product+Image';
-  const productImages = [
-    product.images?.[0] || fallbackUrl,
-    fallbackUrl,
-    fallbackUrl,
-    fallbackUrl
-  ];
-
   return (
     <UserLayout>
       <Container className="py-5">
@@ -186,17 +196,29 @@ const handleWishlistToggle = async () => {
           <Col lg={6} className="mb-4">
             <Card className="border-0 shadow-sm">
               <Card.Body className="p-0">
-                <div className="position-relative">
-                  <img
-                    src={productImages[selectedImage]}
-                    alt={product.name}
-                    className="img-fluid w-100"
-                    style={{ height: '500px', objectFit: 'cover' }}
-                  />
+                <div className="position-relative product-media-container">
+  {mediaItems[selectedMedia]?.type === 'video' ? (
+  <video
+    controls
+    className="img-fluid w-100 main-product-media"
+    poster={product.images?.[0] || 'https://placehold.co/500x500?text=Product+Video'}
+  >
+    <source src={mediaItems[selectedMedia]?.url} type="video/mp4" />
+    Your browser does not support the video tag.
+  </video>
+) : (
+  <img
+    src={mediaItems[selectedMedia]?.url}
+    alt={product.name}
+    className="img-fluid w-100 main-product-media"
+  />
+)}
+
+                  
                   <Button
                     variant="light"
                     size="sm"
-                    className="position-absolute top-0 end-0 m-3"
+                    className="position-absolute top-0 end-0 m-3 wishlist-btn"
                     onClick={handleWishlistToggle}
                   >
                     <FontAwesomeIcon 
@@ -206,18 +228,33 @@ const handleWishlistToggle = async () => {
                     />
                   </Button>
                 </div>
-                <div className="d-flex gap-2 p-3">
-                  {productImages.map((image, index) => (
-                    <img
-                      key={index}
-                      src={image}
-                      alt={`${product.name} ${index + 1}`}
-                      className={`img-thumbnail cursor-pointer ${selectedImage === index ? 'border-success' : ''}`}
-                      style={{ width: '80px', height: '80px', objectFit: 'cover', cursor: 'pointer' }}
-                      onClick={() => setSelectedImage(index)}
-                    />
-                  ))}
-                </div>
+                
+                {mediaItems.length > 1 && (
+                  <div className="media-thumbnails-container">
+                    <div className="d-flex gap-2 p-3 overflow-auto">
+                      {mediaItems.map((media, index) => (
+                        <div
+                          key={index}
+                          className={`media-thumbnail ${selectedMedia === index ? 'selected' : ''}`}
+                          onClick={() => setSelectedMedia(index)}
+                        >
+                          {media.type === 'image' ? (
+                            <img
+                              src={media.url}
+                              alt={`${product.name} ${index + 1}`}
+                              className="img-thumbnail"
+                            />
+                          ) : (
+                            <div className="video-thumbnail">
+                              <FontAwesomeIcon icon={faVideo} className="me-1" />
+                              <span>Video</span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </Card.Body>
             </Card>
           </Col>
