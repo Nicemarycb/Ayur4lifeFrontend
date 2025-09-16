@@ -26,6 +26,7 @@ import {
 import axios from "axios";
 import { useAdminAuth } from "../../contexts/AdminAuthContext";
 import AdminLayout from "../../layouts/AdminLayout";
+import { formatQuantityUnit } from "../../utils/quantityFormatter";
 
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
@@ -46,12 +47,32 @@ const AdminProducts = () => {
     price: "",
     category: "",
     stock: "",
-    gst: "",
+    sgst: "", // SGST rate
+    cgst: "", // CGST rate
     features: [],
+    quantityUnit: "piece", // Add quantity unit field
+    deliveryCharge: "", // Add delivery charge field
+    freeDeliveryThreshold: "", // Add free delivery threshold
   });
 
   const [formErrors, setFormErrors] = useState({});
   const { adminUser } = useAdminAuth();
+
+  // Add quantity unit options
+  const quantityUnits = [
+    { value: "piece", label: "Piece" },
+    { value: "kg", label: "Kilogram (kg)" },
+    { value: "gram", label: "Gram (g)" },
+    { value: "liter", label: "Liter (L)" },
+    { value: "ml", label: "Milliliter (ml)" },
+    { value: "pack", label: "Pack" },
+    { value: "bottle", label: "Bottle" },
+    { value: "box", label: "Box" },
+    { value: "sachet", label: "Sachet" },
+    { value: "tablet", label: "Tablet" },
+    { value: "capsule", label: "Capsule" },
+    { value: "drop", label: "Drop" },
+  ];
 
   useEffect(() => {
     fetchProducts();
@@ -111,7 +132,7 @@ const AdminProducts = () => {
 const handleImageChange = (e) => {
   const file = e.target.files[0];
   if (file) {
-    setImages((prev) => [...prev, file]); // append instead of overwrite
+    setImages((prev) => Array.isArray(prev) ? [...prev, file] : [file]); // append instead of overwrite
   }
   e.target.value = ""; // reset so user can select again
 };
@@ -171,13 +192,19 @@ const handleImageChange = (e) => {
       formDataToSend.append("price", formData.price);
       formDataToSend.append("category", formData.category);
       formDataToSend.append("stock", formData.stock);
-      formDataToSend.append("gst", formData.gst || 0);
+      formDataToSend.append("sgst", formData.sgst || 0);
+      formDataToSend.append("cgst", formData.cgst || 0);
       formDataToSend.append("features", JSON.stringify(formData.features || []));
+      formDataToSend.append("quantityUnit", formData.quantityUnit);
+      formDataToSend.append("deliveryCharge", formData.deliveryCharge || 0);
+      formDataToSend.append("freeDeliveryThreshold", formData.freeDeliveryThreshold || 0);
 
       // Append each image file
-      images.forEach((image) => {
-        formDataToSend.append("images", image);
-      });
+      if (Array.isArray(images)) {
+        images.forEach((image) => {
+          formDataToSend.append("images", image);
+        });
+      }
 
       // Append video if exists
       if (video) {
@@ -222,12 +249,16 @@ const handleEdit = (product) => {
     price: product.price || "",
     category: product.category || "",
     stock: product.stock || "",
-    gst: product.gst || "",
+    sgst: product.sgst || "",
+    cgst: product.cgst || "",
     features: product.features || [],
+    quantityUnit: product.quantityUnit || "piece",
+    deliveryCharge: product.deliveryCharge || "",
+    freeDeliveryThreshold: product.freeDeliveryThreshold || "",
   });
 
   // Preload media
-  setImages(product.images || []);
+  setImages(Array.isArray(product.images) ? product.images : []);
   setVideo(product.video || null);
 
   setShowModal(true);
@@ -256,8 +287,12 @@ const handleEdit = (product) => {
       price: "",
       category: "",
       stock: "",
-      gst: "",
+      sgst: "",
+      cgst: "",
       features: [],
+      quantityUnit: "piece",
+      deliveryCharge: "",
+      freeDeliveryThreshold: "",
     });
     setFormErrors({});
     setImages([]);
@@ -461,17 +496,19 @@ return (
                     <th>Category</th>
                     <th>Price</th>
                     <th>Stock</th>
+                    <th>Unit</th>
+                    <th>Delivery</th>
                     <th>Status</th>
                     <th>Media</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {products.map((product) => (
+                  {Array.isArray(products) && products.map((product) => (
                     <tr key={product.id}>
                       <td>
                         <img
-                          src={product.images?.[0] || "/placeholder.jpg"}
+                          src={product.images?.[0] || "/Ayur4life_logo_round_png-01.png"}
                           alt={product.name}
                           style={{
                             width: "50px",
@@ -479,6 +516,9 @@ return (
                             objectFit: "cover",
                           }}
                           className="rounded"
+                          onError={(e) => {
+                            e.target.src = "/Ayur4life_logo_round_png-01.png";
+                          }}
                         />
                         {product.images && product.images.length > 1 && (
                           <Badge bg="info" className="ms-1">
@@ -490,7 +530,7 @@ return (
                         <strong>{product.name}</strong>
                         <br />
                         <small className="text-muted">
-                          {product.description?.substring(0, 50)}...
+                          {product.description?.substring(0, 30)}...
                         </small>
                       </td>
                       <td>
@@ -509,8 +549,21 @@ return (
                               : "text-danger"
                           }
                         >
-                          {product.stock} units
+                          {product.stock} {formatQuantityUnit(product.quantityUnit)}
                         </span>
+                      </td>
+                      <td>
+                        <Badge bg="info">{formatQuantityUnit(product.quantityUnit)}</Badge>
+                      </td>
+                      <td>
+                        <div className="text-center">
+                          <div className="fw-bold">₹{product.deliveryCharge || 0}</div>
+                          {product.freeDeliveryThreshold > 0 && (
+                            <small className="text-muted">
+                              Free above ₹{product.freeDeliveryThreshold}
+                            </small>
+                          )}
+                        </div>
                       </td>
                       <td>
                         {product.stock > 0 ? (
@@ -630,7 +683,7 @@ return (
             </Form.Group>
 
             <Row>
-              <Col md={4}>
+              <Col md={3}>
                 <Form.Group className="mb-3">
                   <Form.Label>Price (₹) *</Form.Label>
                   <Form.Control
@@ -646,7 +699,7 @@ return (
                   </Form.Control.Feedback>
                 </Form.Group>
               </Col>
-              <Col md={4}>
+              <Col md={3}>
                 <Form.Group className="mb-3">
                   <Form.Label>Stock *</Form.Label>
                   <Form.Control
@@ -661,16 +714,88 @@ return (
                   </Form.Control.Feedback>
                 </Form.Group>
               </Col>
-              <Col md={4}>
+              <Col md={3}>
                 <Form.Group className="mb-3">
-                  <Form.Label>GST (%)</Form.Label>
+                  <Form.Label>Quantity Unit *</Form.Label>
+                  <Form.Select
+                    name="quantityUnit"
+                    value={formData?.quantityUnit || "piece"}
+                    onChange={handleInputChange}
+                  >
+                    {Array.isArray(quantityUnits) && quantityUnits.map((unit) => (
+                      <option key={unit.value} value={unit.value}>
+                        {unit.label}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group className="mb-3">
+                  <Form.Label>SGST (%)</Form.Label>
                   <Form.Control
                     type="number"
                     step="0.01"
-                    name="gst"
-                    value={formData?.gst || ""}
+                    name="sgst"
+                    value={formData?.sgst || ""}
                     onChange={handleInputChange}
+                    placeholder="0.00"
                   />
+                  <Form.Text className="text-muted">
+                    State GST rate
+                  </Form.Text>
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group className="mb-3">
+                  <Form.Label>CGST (%)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    step="0.01"
+                    name="cgst"
+                    value={formData?.cgst || ""}
+                    onChange={handleInputChange}
+                    placeholder="0.00"
+                  />
+                  <Form.Text className="text-muted">
+                    Central GST rate
+                  </Form.Text>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            {/* Delivery Charges Section */}
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Delivery Charge (₹)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    step="0.01"
+                    name="deliveryCharge"
+                    value={formData?.deliveryCharge || ""}
+                    onChange={handleInputChange}
+                    placeholder="0.00"
+                  />
+                  <Form.Text className="text-muted">
+                    Standard delivery charge for this product
+                  </Form.Text>
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Free Delivery Threshold (₹)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    step="0.01"
+                    name="freeDeliveryThreshold"
+                    value={formData?.freeDeliveryThreshold || ""}
+                    onChange={handleInputChange}
+                    placeholder="0.00"
+                  />
+                  <Form.Text className="text-muted">
+                    Order value above which delivery becomes free
+                  </Form.Text>
                 </Form.Group>
               </Col>
             </Row>
@@ -692,9 +817,9 @@ return (
 </Form.Group>
 
 
-            {images.length > 0 && (
+            {images && images.length > 0 && (
               <div className="d-flex flex-wrap gap-2 mt-2">
-                {images.map((img, index) => (
+                {Array.isArray(images) && images.map((img, index) => (
                   <div key={index} className="position-relative">
                     <img
                       src={typeof img === "string" ? img : URL.createObjectURL(img)}
@@ -705,7 +830,7 @@ return (
                       variant="danger"
                       size="sm"
                       className="position-absolute top-0 end-0"
-                      onClick={() => setImages(prev => prev.filter((_, i) => i !== index))}
+                      onClick={() => setImages(prev => Array.isArray(prev) ? prev.filter((_, i) => i !== index) : [])}
                     >
                       ×
                     </Button>
@@ -752,7 +877,7 @@ return (
             {/* Features */}
             <Form.Group className="mb-3 mt-3">
               <Form.Label>Features</Form.Label>
-              {formData.features.map((feature, index) => (
+              {Array.isArray(formData.features) && formData.features.map((feature, index) => (
                 <div key={index} className="d-flex gap-2 mb-2">
                   <Form.Control
                     type="text"
@@ -812,10 +937,16 @@ return (
               {/* Images Section */}
               <h5 className="mb-3">Images</h5>
               <Row>
-                {imageManagementProduct.images?.map((image, index) => (
+                {Array.isArray(imageManagementProduct.images) && imageManagementProduct.images.map((image, index) => (
                   <Col md={4} key={index} className="mb-3">
                     <Card>
-                      <Card.Img variant="top" src={image} />
+                      <Card.Img 
+                        variant="top" 
+                        src={image || "/Ayur4life_logo_round_png-01.png"}
+                        onError={(e) => {
+                          e.target.src = "/Ayur4life_logo_round_png-01.png";
+                        }}
+                      />
                       <Card.Body className="p-2">
                         <div className="d-grid gap-1">
                           <label className="btn btn-sm btn-primary">

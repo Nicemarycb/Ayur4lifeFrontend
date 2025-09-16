@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSignInAlt, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { faSignInAlt, faEye, faEyeSlash, faLeaf, faHeart } from '@fortawesome/free-solid-svg-icons';
 import UserLayout from '../layouts/UserLayout';
 import { useUserAuth } from '../contexts/UserAuthContext';
+import './Login.css';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -55,18 +56,19 @@ const Login = () => {
 
   return (
     <UserLayout>
-      <div className="bg-light min-vh-100 d-flex align-items-center">
-      <Container>
-        <Row className="justify-content-center">
-          <Col md={6} lg={5} xl={4}>
-            <Card className="shadow">
-              <Card.Body className="p-5">
-                <div className="text-center mb-4">
-                  <h2 className="text-success fw-bold">
+      <div className="login-container">
+        <Container>
+          <Row className="justify-content-center">
+            <Col md={6} lg={5} xl={4}>
+              <Card className="login-card shadow">
+                <div className="login-header">
+                  <h2>
+                    <FontAwesomeIcon icon={faLeaf} className="me-2" />
                     <span className="text-warning">Ayur</span>4Life
                   </h2>
-                  <p className="text-muted">Welcome back! Please login to your account.</p>
+                  <p>Welcome back! Please login to your account.</p>
                 </div>
+                <Card.Body className="login-form">
 
                 {error && (
                   <Alert variant="danger" dismissible onClose={clearError}>
@@ -75,8 +77,8 @@ const Login = () => {
                 )}
 
                 <Form onSubmit={handleSubmit}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Email Address</Form.Label>
+                  <div className="form-group">
+                    <label className="form-label">Email Address</label>
                     <Form.Control
                       type="email"
                       name="email"
@@ -84,11 +86,12 @@ const Login = () => {
                       onChange={handleChange}
                       placeholder="Enter your email"
                       required
+                      className="form-control"
                     />
-                  </Form.Group>
+                  </div>
 
-                  <Form.Group className="mb-4">
-                    <Form.Label>Password</Form.Label>
+                  <div className="form-group">
+                    <label className="form-label">Password</label>
                     <div className="position-relative">
                       <Form.Control
                         type={showPassword ? 'text' : 'password'}
@@ -97,31 +100,30 @@ const Login = () => {
                         onChange={handleChange}
                         placeholder="Enter your password"
                         required
-                      />
+                        className="form-control"
+                    />
                       <Button
                         type="button"
                         variant="link"
-                        className="position-absolute top-50 end-0 translate-middle-y pe-3"
+                        className="password-toggle"
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         <FontAwesomeIcon 
                           icon={showPassword ? faEyeSlash : faEye} 
-                          className="text-muted"
                         />
                       </Button>
                     </div>
-                  </Form.Group>
+                  </div>
 
                   <Button
                     type="submit"
                     variant="success"
                     size="lg"
-                    className="w-100 mb-3"
+                    className={`submit-btn ${loading ? 'loading' : ''}`}
                     disabled={loading}
                   >
                     {loading ? (
                       <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                         Logging in...
                       </>
                     ) : (
@@ -132,10 +134,10 @@ const Login = () => {
                     )}
                   </Button>
 
-                  <div className="text-center">
+                  <div className="register-link">
                     <p className="mb-0">
                       Don't have an account?{' '}
-                      <Link to="/register" className="text-success text-decoration-none fw-semibold">
+                      <Link to="/register">
                         Register here
                       </Link>
                     </p>

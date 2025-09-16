@@ -161,13 +161,45 @@ export const CartProvider = ({ children }) => {
 
   const calculateTotals = () => {
     const subtotal = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
-    const gst = subtotal * 0.18; // 18% GST
-    const total = subtotal + gst;
+    
+    // Calculate SGST and CGST based on product rates
+    let totalSgst = 0;
+    let totalCgst = 0;
+    
+    cart.forEach(item => {
+      const itemSubtotal = item.product.price * item.quantity;
+      const sgstRate = parseFloat(item.product.sgst || 0) / 100;
+      const cgstRate = parseFloat(item.product.cgst || 0) / 100;
+      
+      totalSgst += itemSubtotal * sgstRate;
+      totalCgst += itemSubtotal * cgstRate;
+    });
+    
+    const totalGst = totalSgst + totalCgst;
+
+    // Delivery charge: sum of per-product deliveryCharge * quantity
+    const perProductDelivery = cart.reduce((sum, item) => {
+      const charge = parseFloat(item.product.deliveryCharge || 0);
+      return sum + (charge * item.quantity);
+    }, 0);
+
+    // Free delivery threshold: use the lowest threshold among items, if any
+    const thresholds = cart
+      .map(i => parseFloat(i.product.freeDeliveryThreshold || 0))
+      .filter(v => v > 0);
+    const freeThreshold = thresholds.length > 0 ? Math.min(...thresholds) : Infinity;
+
+    const deliveryCharge = subtotal >= freeThreshold ? 0 : perProductDelivery;
+
+    const total = subtotal + totalGst + deliveryCharge;
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
     return {
       subtotal,
-      gst,
+      sgst: totalSgst,
+      cgst: totalCgst,
+      gst: totalGst, // Keep for backward compatibility
+      deliveryCharge,
       total,
       totalItems
     };

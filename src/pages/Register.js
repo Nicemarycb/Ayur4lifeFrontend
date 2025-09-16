@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUserPlus, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { faUserPlus, faEye, faEyeSlash, faLeaf, faShieldAlt, faHeart } from '@fortawesome/free-solid-svg-icons';
 import UserLayout from '../layouts/UserLayout';
 import { useUserAuth } from '../contexts/UserAuthContext';
+import './Register.css';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -149,18 +150,25 @@ const Register = () => {
 
   return (
     <UserLayout>
-      <div className="bg-light min-vh-100 py-5">
-      <Container>
-        <Row className="justify-content-center">
-          <Col lg={8} xl={7}>
-            <Card className="shadow">
-              <Card.Body className="p-5">
-                <div className="text-center mb-4">
-                  <h2 className="text-success fw-bold">
+      <div className="register-container">
+        <Container>
+          <Row className="justify-content-center">
+            <Col lg={8} xl={7}>
+              <Card className="register-card shadow">
+                <div className="register-header">
+                  <h2>
+                    <FontAwesomeIcon icon={faLeaf} className="me-2" />
                     <span className="text-warning">Ayur</span>4Life
                   </h2>
-                  <p className="text-muted">Create your account to start your wellness journey</p>
+                  <p>Create your account to start your wellness journey</p>
                 </div>
+                <Card.Body className="register-form">
+                  <div className="text-center mb-4">
+                    <h5 className="text-success mb-3">
+                      <FontAwesomeIcon icon={faShieldAlt} className="me-2" />
+                      Personal Information
+                    </h5>
+                  </div>
 
                 {error && (
                   <Alert variant="danger" dismissible onClose={clearError}>
@@ -171,10 +179,10 @@ const Register = () => {
                 <Form onSubmit={handleSubmit}>
                   {/* Personal Information */}
                   <h5 className="text-success mb-3">Personal Information</h5>
-                  <Row>
+                  <Row className="form-row">
                     <Col md={6}>
-                      <Form.Group className="mb-3">
-                        <Form.Label>First Name *</Form.Label>
+                      <div className="form-group">
+                        <label className="form-label">First Name *</label>
                         <Form.Control
                           type="text"
                           name="firstName"
@@ -182,15 +190,16 @@ const Register = () => {
                           onChange={handleChange}
                           placeholder="Enter your first name"
                           isInvalid={!!errors.firstName}
+                          className="form-control"
                         />
                         <Form.Control.Feedback type="invalid">
                           {errors.firstName}
                         </Form.Control.Feedback>
-                      </Form.Group>
+                      </div>
                     </Col>
                     <Col md={6}>
-                      <Form.Group className="mb-3">
-                        <Form.Label>Last Name *</Form.Label>
+                      <div className="form-group">
+                        <label className="form-label">Last Name *</label>
                         <Form.Control
                           type="text"
                           name="lastName"
@@ -198,11 +207,12 @@ const Register = () => {
                           onChange={handleChange}
                           placeholder="Enter your last name"
                           isInvalid={!!errors.lastName}
+                          className="form-control"
                         />
                         <Form.Control.Feedback type="invalid">
                           {errors.lastName}
                         </Form.Control.Feedback>
-                      </Form.Group>
+                      </div>
                     </Col>
                   </Row>
 
@@ -430,12 +440,11 @@ const Register = () => {
                     type="submit"
                     variant="success"
                     size="lg"
-                    className="w-100 mb-3"
+                    className={`submit-btn ${loading ? 'loading' : ''}`}
                     disabled={loading}
                   >
                     {loading ? (
                       <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                         Creating Account...
                       </>
                     ) : (
@@ -446,21 +455,21 @@ const Register = () => {
                     )}
                   </Button>
 
-                  <div className="text-center">
+                  <div className="login-link">
                     <p className="mb-0">
                       Already have an account?{' '}
-                      <Link to="/login" className="text-success text-decoration-none fw-semibold">
+                      <Link to="/login">
                         Login here
                       </Link>
                     </p>
                   </div>
                 </Form>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </Container>
-    </div>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        </Container>
+      </div>
     </UserLayout>
   );
 };

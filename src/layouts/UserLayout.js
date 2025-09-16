@@ -1,5 +1,6 @@
 import React from 'react';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 
 const UserLayout = ({ children }) => {
   return (
@@ -8,6 +9,7 @@ const UserLayout = ({ children }) => {
       <main className="main-content">
         {children}
       </main>
+      <Footer />
     </div>
   );
 };

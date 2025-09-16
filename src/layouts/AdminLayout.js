@@ -137,7 +137,12 @@ import {
   faBoxes,
   faShoppingBag,
   faUsers,
-  faHome
+  faHome,
+  faEnvelope,
+  faPercent,
+  faEdit,
+  faEye,
+  faTimes
 } from '@fortawesome/free-solid-svg-icons';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
 
@@ -188,6 +193,26 @@ const { admin: user, adminLogout, isAdmin } = useAdminAuth();
                 <FontAwesomeIcon icon={faUsers} className="me-2" />
                 Users
               </Nav.Link>
+              <Nav.Link as={Link} to="/admin/contacts" className={location.pathname === '/admin/contacts' ? 'active' : ''}>
+                <FontAwesomeIcon icon={faEnvelope} className="me-2" />
+                Contacts
+              </Nav.Link>
+                             <Nav.Link as={Link} to="/admin/coupons" className={location.pathname === '/admin/coupons' ? 'active' : ''}>
+                 <FontAwesomeIcon icon={faPercent} className="me-2" />
+                 Coupons
+               </Nav.Link>
+               <Nav.Link as={Link} to="/admin/return-policy" className={location.pathname === '/admin/return-policy' ? 'active' : ''}>
+                 <FontAwesomeIcon icon={faEdit} className="me-2" />
+                 Return Policy
+               </Nav.Link>
+               <Nav.Link as={Link} to="/admin/return-requests" className={location.pathname === '/admin/return-requests' ? 'active' : ''}>
+                 <FontAwesomeIcon icon={faEye} className="me-2" />
+                 Returns
+               </Nav.Link>
+               <Nav.Link as={Link} to="/admin/cancellations" className={location.pathname === '/admin/cancellations' ? 'active' : ''}>
+                 <FontAwesomeIcon icon={faTimes} className="me-2" />
+                 Cancellations
+               </Nav.Link>
             </Nav>
             <Nav className="ms-auto">
               <Nav.Link as={Link} to="/" target="_blank">
@@ -222,6 +247,20 @@ const { admin: user, adminLogout, isAdmin } = useAdminAuth();
           {children}
         </Container>
       </div>
+      
+      {/* Admin Footer */}
+      {/* <footer className="bg-dark text-light py-3 mt-5">
+        <Container fluid>
+          <div className="d-flex justify-content-between align-items-center">
+            <span className="text-muted small">
+              © {new Date().getFullYear()} Ayur4Life Admin Panel
+            </span>
+            <span className="text-muted small">
+              Secure Admin Access
+            </span>
+          </div>
+        </Container>
+      </footer> */}
 
       <style>{`
         .admin-layout {

@@ -438,6 +438,7 @@ import { useCart } from '../contexts/CartContext';
 import axios from 'axios';
 import UserLayout from '../layouts/UserLayout';
 import { useUserAuth } from '../contexts/UserAuthContext';
+import CouponInput from '../components/CouponInput';
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -448,7 +449,7 @@ const Checkout = () => {
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderId, setOrderId] = useState(null);
 
-  const { subtotal, gst, total, totalItems } = calculateTotals();
+  const { subtotal, sgst, cgst, gst, deliveryCharge, total, totalItems } = calculateTotals();
 
   const [formData, setFormData] = useState({
     firstName: user?.firstName || '',
@@ -466,6 +467,57 @@ const Checkout = () => {
   });
 
   const [formErrors, setFormErrors] = useState({});
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+
+  // Calculate final totals with coupon discount
+  const calculateFinalTotals = () => {
+    const baseSubtotal = subtotal;
+    const baseDeliveryCharge = deliveryCharge;
+    const discountAmount = appliedCoupon ? appliedCoupon.discountAmount : 0;
+    
+    // Apply discount to subtotal
+    const discountedSubtotal = Math.max(0, baseSubtotal - discountAmount);
+    
+    // Recalculate GST on the discounted subtotal (not proportionally)
+    let finalSgst = 0;
+    let finalCgst = 0;
+    
+    cart.forEach(item => {
+      const itemSubtotal = item.product.price * item.quantity;
+      const itemDiscountRatio = baseSubtotal > 0 ? discountedSubtotal / baseSubtotal : 0;
+      const discountedItemSubtotal = itemSubtotal * itemDiscountRatio;
+      
+      const sgstRate = parseFloat(item.product.sgst || 0) / 100;
+      const cgstRate = parseFloat(item.product.cgst || 0) / 100;
+      
+      finalSgst += discountedItemSubtotal * sgstRate;
+      finalCgst += discountedItemSubtotal * cgstRate;
+    });
+    
+    const finalGst = finalSgst + finalCgst;
+    const finalTotal = discountedSubtotal + finalGst + baseDeliveryCharge;
+    
+    return {
+      originalSubtotal: baseSubtotal,
+      discountAmount,
+      discountedSubtotal,
+      sgst: finalSgst,
+      cgst: finalCgst,
+      gst: finalGst,
+      deliveryCharge: baseDeliveryCharge,
+      total: finalTotal
+    };
+  };
+
+  const finalTotals = calculateFinalTotals();
+
+  const handleCouponApplied = (couponData) => {
+    setAppliedCoupon(couponData);
+  };
+
+  const handleCouponRemoved = () => {
+    setAppliedCoupon(null);
+  };
 
   useEffect(() => {
     // Navigate to cart page if the cart is empty
@@ -539,9 +591,15 @@ const Checkout = () => {
         billingAddress: formData.address,
         paymentMethod: formData.paymentMethod,
         notes: formData.notes,
-        subtotal,
-        gst,
-        total
+        subtotal: finalTotals.originalSubtotal,
+        sgst: finalTotals.sgst,
+        cgst: finalTotals.cgst,
+        gst: finalTotals.gst,
+        deliveryCharge: finalTotals.deliveryCharge,
+        total: finalTotals.total,
+        finalAmount: finalTotals.total,
+        couponCode: appliedCoupon ? appliedCoupon.coupon.code : null,
+        discountAmount: finalTotals.discountAmount
       };
 
       const response = await axios.post('/api/orders', orderData);
@@ -574,7 +632,7 @@ const Checkout = () => {
             <Button variant="primary" onClick={() => navigate('/')}>
               Continue Shopping
             </Button>
-            <Button variant="outline-primary" onClick={() => navigate('/account')}>
+            <Button variant="primary" onClick={() => navigate('/account')}>
               View Orders
             </Button>
           </div>
@@ -793,6 +851,15 @@ const Checkout = () => {
                 <h5 className="mb-0">Order Summary</h5>
               </Card.Header>
               <Card.Body>
+                {/* Coupon Input */}
+                <CouponInput
+                  onCouponApplied={handleCouponApplied}
+                  onCouponRemoved={handleCouponRemoved}
+                  appliedCoupon={appliedCoupon}
+                  orderAmount={subtotal}
+                />
+                
+                <hr />
                 {cart.map((item) => (
                   <div key={item.id} className="d-flex justify-content-between align-items-center mb-2">
                     <div>
@@ -810,18 +877,44 @@ const Checkout = () => {
                 
                 <div className="d-flex justify-content-between mb-2">
                   <span>Subtotal ({totalItems} items):</span>
-                  <span>₹{subtotal.toFixed(2)}</span>
+                  <span>₹{finalTotals.originalSubtotal.toFixed(2)}</span>
                 </div>
-                {gst > 0 && (
+                {appliedCoupon && (
+                  <div className="d-flex justify-content-between mb-2 text-success">
+                    <span>Discount ({appliedCoupon.coupon.code}):</span>
+                    <span>-₹{finalTotals.discountAmount.toFixed(2)}</span>
+                  </div>
+                )}
+                {finalTotals.sgst > 0 && (
                   <div className="d-flex justify-content-between mb-2">
-                    <span>GST:</span>
-                    <span>₹{gst.toFixed(2)}</span>
+                    <span>SGST:</span>
+                    <span>₹{finalTotals.sgst.toFixed(2)}</span>
+                  </div>
+                )}
+                {finalTotals.cgst > 0 && (
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>CGST:</span>
+                    <span>₹{finalTotals.cgst.toFixed(2)}</span>
+                  </div>
+                )}
+                {finalTotals.gst > 0 && (
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Total GST:</span>
+                    <span>₹{finalTotals.gst.toFixed(2)}</span>
+                  </div>
+                )}
+                {finalTotals.deliveryCharge > 0 && (
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Delivery:</span>
+                    <span>₹{finalTotals.deliveryCharge.toFixed(2)}</span>
                   </div>
                 )}
                 <hr />
                 <div className="d-flex justify-content-between mb-3">
                   <strong>Total:</strong>
-                  <strong className="text-primary">₹{total.toFixed(2)}</strong>
+                  <strong className="text-primary">
+                    ₹{finalTotals.total.toFixed(2)}
+                  </strong>
                 </div>
                 
                 <Button

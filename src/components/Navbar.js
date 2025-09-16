@@ -289,6 +289,10 @@ const NavigationBar = () => {
               Home
             </Nav.Link>
             
+            <Nav.Link as={Link} to="/about" className="fw-semibold">
+              About
+            </Nav.Link>
+            
             {/* Categories Dropdown */}
             <Dropdown as={Nav.Item}>
               <Dropdown.Toggle as={Nav.Link} className="fw-semibold">

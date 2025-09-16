@@ -1,0 +1,422 @@
+/* Modern Footer Styles */
+footer {
+  margin-top: auto;
+  background: linear-gradient(135deg, #0d4a1a 0%, #1a5f2e 50%, #2d7a3d 100%);
+  border-top: 3px solid #28a745;
+  position: relative;
+}
+
+footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #28a745, #20c997, #17a2b8, #28a745);
+  background-size: 200% 100%;
+  animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Footer Headings */
+footer h5, footer h6 {
+  color: #ffffff !important;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+footer h5::after, footer h6::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, #90EE90, #98FB98);
+  border-radius: 2px;
+}
+
+/* Company Brand */
+footer .company-brand {
+  color: #ffffff !important;
+  font-weight: 700;
+  font-size: 1.8rem;
+}
+
+footer .company-brand span {
+  color: #ffffff !important;
+}
+
+/* Company Description */
+footer .company-description {
+  color: #ffffff;
+  line-height: 1.6;
+  font-size: 0.95rem;
+  opacity: 0.9;
+}
+
+/* Social Media Links */
+footer .social-links {
+  display: flex;
+  gap: 12px;
+  margin-top: 1.5rem;
+}
+
+footer .social-links a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: rgba(144, 238, 144, 0.2);
+  border: 2px solid rgba(144, 238, 144, 0.4);
+  color: #90EE90;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+footer .social-links a::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, #90EE90, #98FB98);
+  transition: left 0.3s ease;
+  z-index: 1;
+}
+
+footer .social-links a:hover::before {
+  left: 0;
+}
+
+footer .social-links a:hover {
+  transform: translateY(-3px);
+  border-color: #90EE90;
+  box-shadow: 0 8px 25px rgba(144, 238, 144, 0.4);
+}
+
+footer .social-links a svg {
+  position: relative;
+  z-index: 2;
+  transition: color 0.3s ease;
+}
+
+footer .social-links a:hover svg {
+  color: #ffffff !important;
+}
+
+/* Footer Links */
+footer .list-unstyled li {
+  margin-bottom: 12px;
+}
+
+footer .list-unstyled li a {
+  color: #ffffff;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  padding: 8px 0;
+  display: flex;
+  align-items: center;
+  position: relative;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+footer .list-unstyled li a:hover {
+  color: #90EE90;
+  padding-left: 12px;
+}
+
+footer .list-unstyled li a svg {
+  margin-right: 10px;
+  color: #90EE90;
+  transition: transform 0.3s ease;
+}
+
+footer .list-unstyled li a:hover svg {
+  transform: translateX(5px);
+}
+
+/* Contact Information */
+footer .contact-info .d-flex {
+  margin-bottom: 15px;
+  padding: 10px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+footer .contact-info .d-flex:hover {
+  background: rgba(144, 238, 144, 0.15);
+  border-color: rgba(144, 238, 144, 0.3);
+  transform: translateX(8px);
+}
+
+footer .contact-info .d-flex svg {
+  color: #90EE90;
+  margin-right: 12px;
+  font-size: 1.1rem;
+  min-width: 20px;
+}
+
+footer .contact-info .d-flex span {
+  color: #e8f5e8;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* Newsletter Form */
+footer .newsletter-form {
+  margin-top: 1.5rem;
+}
+
+footer .newsletter-form .form-control {
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+footer .newsletter-form .form-control::placeholder {
+  color: #c8e6c8;
+}
+
+footer .newsletter-form .form-control:focus {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #90EE90;
+  box-shadow: 0 0 0 0.2rem rgba(144, 238, 144, 0.25);
+  outline: none;
+}
+
+footer .newsletter-form .btn {
+  background: linear-gradient(45deg, #90EE90, #98FB98);
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  color: #1a5f2e;
+}
+
+footer .newsletter-form .btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, #98FB98, #90EE90);
+  transition: left 0.3s ease;
+}
+
+footer .newsletter-form .btn:hover::before {
+  left: 0;
+}
+
+footer .newsletter-form .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(144, 238, 144, 0.5);
+}
+
+footer .newsletter-form .btn span {
+  position: relative;
+  z-index: 1;
+}
+
+/* WhatsApp Button */
+footer .btn-success {
+  position: relative;
+  overflow: hidden;
+}
+
+footer .btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(37, 211, 102, 0.4);
+}
+
+footer .btn-success::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, #128c7e, #25d366);
+  transition: left 0.3s ease;
+}
+
+footer .btn-success:hover::before {
+  left: 0;
+}
+
+footer .btn-success svg {
+  position: relative;
+  z-index: 1;
+}
+
+/* Bottom Footer */
+footer .bottom-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  padding-top: 1.5rem;
+  margin-top: 2rem;
+}
+
+footer .bottom-footer .copyright {
+  color: #c8e6c8;
+  font-size: 0.9rem;
+}
+
+footer .bottom-footer .legal-links {
+  display: flex;
+  gap: 20px;
+  justify-content: flex-end;
+}
+
+footer .bottom-footer .legal-links a {
+  color: #c8e6c8;
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+  padding: 5px 0;
+  position: relative;
+}
+
+footer .bottom-footer .legal-links a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: #90EE90;
+  transition: width 0.3s ease;
+}
+
+footer .bottom-footer .legal-links a:hover {
+  color: #90EE90;
+}
+
+footer .bottom-footer .legal-links a:hover::after {
+  width: 100%;
+}
+
+/* Back to Top Button */
+footer .back-to-top-section {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.back-to-top-btn {
+  background: linear-gradient(45deg, #90EE90, #98FB98);
+  border: none;
+  border-radius: 25px;
+  padding: 10px 20px;
+  color: #1a5f2e;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.back-to-top-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, #98FB98, #90EE90);
+  transition: left 0.3s ease;
+}
+
+.back-to-top-btn:hover::before {
+  left: 0;
+}
+
+.back-to-top-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(144, 238, 144, 0.5);
+}
+
+.back-to-top-btn svg {
+  position: relative;
+  z-index: 1;
+  margin-right: 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  footer .bottom-footer .legal-links {
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+  
+  footer .social-links {
+    justify-content: center;
+  }
+  
+  footer .contact-info .d-flex:hover {
+    transform: translateX(0);
+  }
+  
+  footer h5::after, footer h6::after {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 576px) {
+  footer {
+    padding: 2rem 0;
+  }
+  
+  footer .social-links a {
+    width: 40px;
+    height: 40px;
+  }
+  
+  footer .newsletter-form .btn {
+    width: 100%;
+  }
+}
+
+/* Hover Effects for Links */
+footer .list-unstyled li a {
+  position: relative;
+}
+
+footer .list-unstyled li a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #90EE90, #98FB98);
+  transition: width 0.3s ease;
+  border-radius: 1px;
+}
+
+footer .list-unstyled li a:hover::after {
+  width: 100%;
+}

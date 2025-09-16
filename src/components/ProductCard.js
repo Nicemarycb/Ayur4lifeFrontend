@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart, faShoppingCart, faStar, faVideo } from '@fortawesome/free-solid-svg-icons';
 import { faHeart as farHeart } from '@fortawesome/free-regular-svg-icons';
+import { formatQuantityUnit } from '../utils/quantityFormatter';
+import ProductRating from './ProductRating';
 import "./ProductCard.css";
 
 const ProductCard = ({ product, onAddToCart, onWishlistToggle, isInWishlist, isAdminView = false, onImageUpdate, onImageRemove }) => {
@@ -15,7 +17,7 @@ const ProductCard = ({ product, onAddToCart, onWishlistToggle, isInWishlist, isA
     setImageError(true);
   };
 
-  const fallbackImage = 'https://placehold.co/300x300?text=Product+Image';
+  const fallbackImage = '/Ayur4life_logo_round_png-01.png';
 
   const handleImageUpload = async (event, index) => {
     const file = event.target.files[0];
@@ -90,10 +92,13 @@ const ProductCard = ({ product, onAddToCart, onWishlistToggle, isInWishlist, isA
               {product.images.map((img, index) => (
                 <div key={index} className="position-relative">
                   <img 
-                    src={img} 
+                    src={img || fallbackImage} 
                     alt={`Thumb ${index + 1}`}
                     className="admin-thumbnail"
                     onClick={() => setEditingImageIndex(editingImageIndex === index ? null : index)}
+                    onError={(e) => {
+                      e.target.src = fallbackImage;
+                    }}
                   />
                   {editingImageIndex === index && (
                     <div className="image-edit-menu">
@@ -150,7 +155,7 @@ const ProductCard = ({ product, onAddToCart, onWishlistToggle, isInWishlist, isA
       <Card.Body className="d-flex flex-column">
         <Card.Title className="fw-bold product-title">{product.name}</Card.Title>
         <Card.Text className="text-muted small mb-2 product-category">
-          {product.category}
+          {product.category} • {formatQuantityUnit(product.quantityUnit)}
         </Card.Text>
         <Card.Text className="flex-grow-1 product-description">
           {product.description?.substring(0, 100)}...
@@ -160,15 +165,13 @@ const ProductCard = ({ product, onAddToCart, onWishlistToggle, isInWishlist, isA
             <span className="h5 text-success mb-0 product-price">₹{product.price}</span>
             <small className="text-muted d-block">+18% GST</small>
           </div>
-          <div className="text-warning product-rating">
-            {[...Array(5)].map((_, i) => (
-              <FontAwesomeIcon 
-                key={i} 
-                icon={faStar} 
-                className={i < 4 ? "text-warning" : "text-muted"} 
-              />
-            ))}
-            <small className="text-muted ms-1">(4.8)</small>
+          <div className="product-rating">
+            <ProductRating 
+              rating={product.rating || 0} 
+              reviewCount={product.reviewCount || 0}
+              size="sm"
+              showCount={true}
+            />
           </div>
         </div>
         <div className="d-flex gap-2 product-actions">

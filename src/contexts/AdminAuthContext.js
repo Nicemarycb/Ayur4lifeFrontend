@@ -76,6 +76,13 @@ export const AdminAuthProvider = ({ children }) => {
     setAdminUser(null);
   };
 
+  const getAuthConfig = () => {
+    const token = localStorage.getItem('adminToken');
+    return {
+      headers: { Authorization: `Bearer ${token}` }
+    };
+  };
+
   const value = {
     isAuthenticated,
     isAdmin,
@@ -83,7 +90,8 @@ export const AdminAuthProvider = ({ children }) => {
     loading,
     adminLogin,
     adminLogout,
-    checkAdminAuth
+    checkAdminAuth,
+    getAuthConfig
   };
 
   return (

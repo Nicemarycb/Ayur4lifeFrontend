@@ -17,6 +17,10 @@ import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
 import UserLayout from '../layouts/UserLayout';
 import { useUserAuth } from '../contexts/UserAuthContext';
+import { getQuantityDisplay, getQuantityLabel, formatQuantityUnit } from '../utils/quantityFormatter';
+import ProductRating from '../components/ProductRating';
+import ReviewForm from '../components/ReviewForm';
+import ReviewList from '../components/ReviewList';
 import './ProductDetail.css'; // We'll create this CSS file
 
 const ProductDetail = () => {
@@ -28,13 +32,17 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedMedia, setSelectedMedia] = useState(0);
   const [mediaItems, setMediaItems] = useState([]);
+  const [reviews, setReviews] = useState([]);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [loadingReviews, setLoadingReviews] = useState(false);
   
-  const { isAuthenticated } = useUserAuth();
+  const { isAuthenticated, user } = useUserAuth();
   const { addToCart } = useCart();
   const { wishlist, addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
   useEffect(() => {
     loadProduct();
+    loadReviews();
   }, [id]);
 
   const loadProduct = async () => {
@@ -48,13 +56,14 @@ const ProductDetail = () => {
         
         // Prepare media items (images + video)
         const media = [];
-        if (data.product.images && data.product.images.length > 0) {
+        if (data.product.images && Array.isArray(data.product.images) && data.product.images.length > 0) {
           data.product.images.forEach(img => {
             media.push({ type: 'image', url: img });
           });
         } else {
           // Fallback if no images
-          media.push({ type: 'image', url: 'https://placehold.co/500x500?text=Product+Image' });
+          media.push({ type: 'image', url: '/Ayur4life_logo_round_png-01.png' });
+          
         }
         
         // Add video if available
@@ -105,14 +114,124 @@ const ProductDetail = () => {
     }
   };
 
-  const calculateGST = (price) => {
-    return price * 0.18;
+  const calculateGST = (price, qty) => {
+    const subtotal = price * qty;
+    const sgstRate = parseFloat(product?.sgst || 0) / 100;
+    const cgstRate = parseFloat(product?.cgst || 0) / 100;
+    
+    const sgst = subtotal * sgstRate;
+    const cgst = subtotal * cgstRate;
+    const totalGst = sgst + cgst;
+    
+    return { sgst, cgst, totalGst };
   };
 
   const calculateTotalPrice = (price, qty) => {
     const subtotal = price * qty;
-    const gst = calculateGST(subtotal);
-    return subtotal + gst;
+    const { totalGst } = calculateGST(price, qty);
+    return subtotal + totalGst;
+  };
+
+  // Review functions
+  const loadReviews = async () => {
+    try {
+      setLoadingReviews(true);
+      const response = await fetch(`/api/reviews/product/${id}`);
+      const data = await response.json();
+      if (response.ok) {
+        setReviews(data.reviews);
+      }
+    } catch (error) {
+      console.error('Error loading reviews:', error);
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
+
+  const handleSubmitReview = async (reviewData) => {
+    try {
+      const response = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('userToken')}`
+        },
+        body: JSON.stringify({
+          productId: id,
+          ...reviewData
+        })
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        alert('Review submitted successfully!');
+        setShowReviewForm(false);
+        loadReviews(); // Reload reviews
+        loadProduct(); // Reload product to update rating
+      } else {
+        throw new Error(data.error || 'Failed to submit review');
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const handleUpdateReview = async (reviewId, reviewData) => {
+    try {
+      const response = await fetch(`/api/reviews/${reviewId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('userToken')}`
+        },
+        body: JSON.stringify(reviewData)
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        alert('Review updated successfully!');
+        loadReviews(); // Reload reviews
+        loadProduct(); // Reload product to update rating
+      } else {
+        throw new Error(data.error || 'Failed to update review');
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    try {
+      const response = await fetch(`/api/reviews/${reviewId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('userToken')}`
+        }
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        alert('Review deleted successfully!');
+        loadReviews(); // Reload reviews
+        loadProduct(); // Reload product to update rating
+      } else {
+        throw new Error(data.error || 'Failed to delete review');
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const canReview = () => {
+    if (!isAuthenticated) return false;
+    
+    // Check if user has already reviewed this product
+    const hasReviewed = reviews.some(review => review.userId === user?.uid);
+    if (hasReviewed) return false;
+    
+    // Check if user has purchased this product (simplified check)
+    // In a real app, you'd check the orders collection
+    return true; // For now, allow all authenticated users to review
   };
 
   if (loading) {
@@ -201,7 +320,7 @@ const ProductDetail = () => {
   <video
     controls
     className="img-fluid w-100 main-product-media"
-    poster={product.images?.[0] || 'https://placehold.co/500x500?text=Product+Video'}
+         poster={product.images?.[0] || '/Ayur4life_logo_round_png-01.png'}
   >
     <source src={mediaItems[selectedMedia]?.url} type="video/mp4" />
     Your browser does not support the video tag.
@@ -211,6 +330,9 @@ const ProductDetail = () => {
     src={mediaItems[selectedMedia]?.url}
     alt={product.name}
     className="img-fluid w-100 main-product-media"
+    onError={(e) => {
+      e.target.src = '/Ayur4life_logo_round_png-01.png';
+    }}
   />
 )}
 
@@ -243,6 +365,9 @@ const ProductDetail = () => {
                               src={media.url}
                               alt={`${product.name} ${index + 1}`}
                               className="img-thumbnail"
+                              onError={(e) => {
+                                e.target.src = '/Ayur4life_logo_round_png-01.png';
+                              }}
                             />
                           ) : (
                             <div className="video-thumbnail">
@@ -264,42 +389,67 @@ const ProductDetail = () => {
               <div className="mb-3">
                 <Badge bg="success" className="mb-2">{product.category}</Badge>
                 <h1 className="h2 fw-bold mb-2">{product.name}</h1>
-                <div className="d-flex align-items-center mb-3">
-                  <div className="text-warning me-2">
-                    {[...Array(5)].map((_, i) => (
-                      <FontAwesomeIcon key={i} icon={faStar} className="text-warning" size="sm" />
-                    ))}
-                  </div>
-                  <span className="text-muted">(4.8/5) - 128 reviews</span>
+                <div className="mb-3">
+                  <ProductRating 
+                    rating={product.rating || 0} 
+                    reviewCount={product.reviewCount || 0}
+                    size="md"
+                  />
                 </div>
               </div>
 
               <div className="mb-4">
                 <div className="d-flex align-items-baseline mb-2">
                   <span className="h3 text-success fw-bold me-3">₹{product.price}</span>
-                  <span className="text-muted text-decoration-line-through">₹{Math.round(product.price * 1.2)}</span>
-                  <Badge bg="danger" className="ms-2">20% OFF</Badge>
+                  {/* <span className="text-muted text-decoration-line-through">₹{Math.round(product.price * 1.2)}</span>
+                  <Badge bg="danger" className="ms-2">20% OFF</Badge> */}
                 </div>
-                <p className="text-muted mb-0"><small>+18% GST applicable</small></p>
+                <p className="text-muted mb-0"><small></small></p>
               </div>
 
               <div className="mb-4">
                 <div className="d-flex justify-content-between align-items-center">
                   <span className="fw-semibold">Availability:</span>
                   <Badge bg={product.stock > 0 ? 'success' : 'danger'}>
-                    {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+                    {product.stock > 0 ? `${getQuantityDisplay(product.stock, product.quantityUnit)} in stock` : 'Out of stock'}
                   </Badge>
                 </div>
                 {product.stock > 0 && product.stock <= 10 && (
                   <Alert variant="warning" className="mt-2 mb-0">
-                    <small>Only {product.stock} left in stock!</small>
+                    <small>Only {getQuantityDisplay(product.stock, product.quantityUnit)} left in stock!</small>
                   </Alert>
                 )}
               </div>
 
+              {/* Delivery Information */}
+              <div className="mb-4">
+                <h6 className="fw-semibold mb-2">Delivery Information</h6>
+                <div className="bg-light p-3 rounded">
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Standard Delivery:</span>
+                    <span className="text-success fw-bold">
+                      ₹{product.deliveryCharge || 0}
+                    </span>
+                  </div>
+                  {product.freeDeliveryThreshold > 0 && (
+                    <div className="d-flex justify-content-between">
+                      <span>Free Delivery Above:</span>
+                      <span className="text-success fw-bold">
+                        ₹{product.freeDeliveryThreshold}
+                      </span>
+                    </div>
+                  )}
+                  <small className="text-muted">
+                    Delivery charges may vary based on location and order value
+                  </small>
+                </div>
+              </div>
+
               {product.stock > 0 && (
                 <div className="mb-4">
-                  <label className="form-label fw-semibold">Quantity:</label>
+                  <label className="form-label fw-semibold">
+                    {getQuantityLabel(product.quantityUnit)}:
+                  </label>
                   <div className="d-flex align-items-center">
                     <Button
                       variant="outline-secondary"
@@ -318,6 +468,9 @@ const ProductDetail = () => {
                       className="mx-2 text-center"
                       style={{ width: '80px' }}
                     />
+                    <span className="text-muted ms-2">
+                      {formatQuantityUnit(product.quantityUnit)}
+                    </span>
                     <Button
                       variant="outline-secondary"
                       size="sm"
@@ -327,6 +480,9 @@ const ProductDetail = () => {
                       <FontAwesomeIcon icon={faPlus} />
                     </Button>
                   </div>
+                  <small className="text-muted">
+                    Available: {getQuantityDisplay(product.stock, product.quantityUnit)}
+                  </small>
                 </div>
               )}
 
@@ -339,16 +495,37 @@ const ProductDetail = () => {
                   </div>
                   <div className="d-flex justify-content-between mb-2">
                     <span>Quantity:</span>
-                    <span>{quantity}</span>
+                    <span>{getQuantityDisplay(quantity, product.quantityUnit)}</span>
                   </div>
                   <div className="d-flex justify-content-between mb-2">
                     <span>Subtotal:</span>
                     <span>₹{product.price * quantity}</span>
                   </div>
-                  <div className="d-flex justify-content-between mb-2">
-                    <span>GST (18%):</span>
-                    <span>₹{calculateGST(product.price * quantity).toFixed(2)}</span>
-                  </div>
+                  {(() => {
+                    const { sgst, cgst, totalGst } = calculateGST(product.price, quantity);
+                    return (
+                      <>
+                        {sgst > 0 && (
+                          <div className="d-flex justify-content-between mb-2">
+                            <span>SGST:</span>
+                            <span>₹{sgst.toFixed(2)}</span>
+                          </div>
+                        )}
+                        {cgst > 0 && (
+                          <div className="d-flex justify-content-between mb-2">
+                            <span>CGST:</span>
+                            <span>₹{cgst.toFixed(2)}</span>
+                          </div>
+                        )}
+                        {totalGst > 0 && (
+                          <div className="d-flex justify-content-between mb-2">
+                            <span>Total GST:</span>
+                            <span>₹{totalGst.toFixed(2)}</span>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                   <hr />
                   <div className="d-flex justify-content-between fw-bold">
                     <span>Total:</span>
@@ -385,7 +562,7 @@ const ProductDetail = () => {
               <div className="mb-4">
                 <h5 className="fw-semibold mb-3">Key Features</h5>
                 <ul className="text-muted">
-                  {product.features && product.features.length > 0 ? (
+                  {product.features && Array.isArray(product.features) && product.features.length > 0 ? (
                     product.features.map((feature, index) => (
                       <li key={index}>{feature}</li>
                     ))
@@ -423,6 +600,51 @@ const ProductDetail = () => {
                   </div>
                 </div>
               </div>
+            </div>
+          </Col>
+        </Row>
+
+        {/* Reviews Section */}
+        <Row className="mt-5">
+          <Col>
+            <div className="border-top pt-4">
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <h4 className="mb-0">Customer Reviews</h4>
+                {canReview() && (
+                  <Button
+                    variant="outline-primary"
+                    onClick={() => setShowReviewForm(!showReviewForm)}
+                  >
+                    {showReviewForm ? 'Cancel Review' : 'Write a Review'}
+                  </Button>
+                )}
+              </div>
+
+              {showReviewForm && canReview() && (
+                <div className="mb-4">
+                  <ReviewForm
+                    productId={id}
+                    onSubmit={handleSubmitReview}
+                    onCancel={() => setShowReviewForm(false)}
+                  />
+                </div>
+              )}
+
+              {loadingReviews ? (
+                <div className="text-center py-4">
+                  <div className="spinner-border text-success" role="status">
+                    <span className="visually-hidden">Loading reviews...</span>
+                  </div>
+                </div>
+              ) : (
+                <ReviewList
+                  reviews={reviews}
+                  productId={id}
+                  currentUserId={user?.uid}
+                  onReviewUpdate={handleUpdateReview}
+                  onReviewDelete={handleDeleteReview}
+                />
+              )}
             </div>
           </Col>
         </Row>

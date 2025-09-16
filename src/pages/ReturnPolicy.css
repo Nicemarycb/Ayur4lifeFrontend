@@ -1,0 +1,384 @@
+/* Return Policy Page Styles */
+
+/* Hero Section */
+.return-policy-hero {
+  background: linear-gradient(135deg, #0d4a1a 0%, #1a5f2e 50%, #2d7a3d 100%);
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.return-policy-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.1)"/><circle cx="10" cy="60" r="0.5" fill="rgba(255,255,255,0.1)"/><circle cx="90" cy="40" r="0.5" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+  opacity: 0.3;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+}
+
+.hero-icon {
+  font-size: 4rem;
+  color: #4ade80;
+  opacity: 0.9;
+}
+
+.hero-title {
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.hero-subtitle {
+  font-size: 1.25rem;
+  color: #e0f2e9;
+  opacity: 0.9;
+  line-height: 1.6;
+}
+
+/* Card Styles */
+.return-card {
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
+  background: white;
+  overflow: hidden;
+}
+
+.return-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+
+.card-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  font-size: 2rem;
+  color: white;
+}
+
+.return-window-card .card-icon {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+}
+
+.refund-method-card .card-icon {
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+}
+
+.conditions-card .card-icon {
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+}
+
+.non-returnable-card .card-icon.warning-icon {
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+}
+
+.shipping-card .card-icon {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+}
+
+.restocking-card .card-icon {
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+}
+
+.address-card .card-icon {
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+}
+
+.how-to-return-card .card-icon {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+}
+
+.card-title {
+  color: #064e3b;
+  font-weight: 600;
+  font-size: 1.5rem;
+}
+
+.card-subtitle {
+  color: #6b7280;
+  font-size: 1rem;
+  margin-bottom: 0;
+}
+
+.card-text {
+  color: #374151;
+  line-height: 1.6;
+  margin-bottom: 0;
+}
+
+/* Return Window Display */
+.return-window-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.return-window-number {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #059669;
+  line-height: 1;
+}
+
+.return-window-unit {
+  font-size: 1.25rem;
+  color: #6b7280;
+  text-transform: capitalize;
+}
+
+/* Refund Method Display */
+.refund-method-display {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #047857;
+  padding: 8px 16px;
+  background: #ecfdf5;
+  border-radius: 8px;
+  border: 2px solid #d1fae5;
+}
+
+/* Condition Items */
+.condition-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border-left: 4px solid #10b981;
+}
+
+.condition-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #10b981;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.condition-text {
+  color: #374151;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+/* Non-Returnable Categories */
+.non-returnable-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.non-returnable-badge {
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+  border: 1px solid #fecaca;
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 20px;
+}
+
+.warning-note {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 4px solid #f59e0b;
+  font-size: 0.875rem;
+}
+
+/* Shipping Status */
+.shipping-info {
+  margin-bottom: 1rem;
+}
+
+.shipping-status {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.shipping-status.customer-pays {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.shipping-status.free-return {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #d1fae5;
+}
+
+.shipping-status.prepaid {
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #dbeafe;
+}
+
+/* Restocking Fee Display */
+.restocking-fee-display {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #059669;
+  padding: 12px 20px;
+  background: #ecfdf5;
+  border-radius: 12px;
+  border: 2px solid #d1fae5;
+}
+
+/* Return Address */
+.return-address {
+  padding: 20px;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.address-label {
+  color: #374151;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.company-name {
+  color: #059669;
+  font-weight: 600;
+  font-size: 1.125rem;
+  margin-bottom: 0.5rem;
+}
+
+.address-line {
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+  line-height: 1.5;
+}
+
+.return-notes {
+  padding: 20px;
+  background: #f0f9ff;
+  border-radius: 12px;
+  border: 1px solid #bae6fd;
+}
+
+.notes-label {
+  color: #0369a1;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.notes-list {
+  color: #0c4a6e;
+  padding-left: 1.5rem;
+  margin-bottom: 0;
+}
+
+.notes-list li {
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+}
+
+/* Step Items */
+.step-item {
+  padding: 20px;
+}
+
+.step-number {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 auto 1rem;
+}
+
+.step-title {
+  color: #064e3b;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.step-description {
+  color: #6b7280;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin-bottom: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2.5rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 1.125rem;
+  }
+  
+  .card-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+  }
+  
+  .return-window-number {
+    font-size: 2.5rem;
+  }
+  
+  .step-number {
+    width: 50px;
+    height: 50px;
+    font-size: 1.25rem;
+  }
+}
+
+/* Loading and Error States */
+.text-success {
+  color: #059669 !important;
+}
+
+/* Hover Effects */
+.return-card:hover .card-icon {
+  transform: scale(1.1);
+  transition: transform 0.3s ease;
+}
+
+.condition-item:hover {
+  background: #f3f4f6;
+  transform: translateX(5px);
+  transition: all 0.3s ease;
+}
+
+.step-item:hover .step-number {
+  transform: scale(1.1);
+  transition: transform 0.3s ease;
+}

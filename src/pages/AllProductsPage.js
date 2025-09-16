@@ -5,7 +5,7 @@ import UserLayout from '../layouts/UserLayout';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
 import { useUserAuth } from '../contexts/UserAuthContext';
-import ProductCard from '../components/ProductCard'; // Assuming you create a separate ProductCard component
+import ProductCard from '../components/ProductCard';
 
 const AllProductsPage = () => {
     const [products, setProducts] = useState([]);

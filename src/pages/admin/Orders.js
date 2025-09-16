@@ -753,6 +753,11 @@ const AdminOrders = () => {
                         <br />
                         <small className="text-muted">
                           Subtotal: ₹{(order.subtotal || 0).toFixed(2)}
+                          {typeof order.sgstAmount === 'number' && order.sgstAmount > 0 ? ` • SGST: ₹${order.sgstAmount.toFixed(2)}` : ''}
+                          {typeof order.cgstAmount === 'number' && order.cgstAmount > 0 ? ` • CGST: ₹${order.cgstAmount.toFixed(2)}` : ''}
+                          {typeof order.gstAmount === 'number' ? ` • Total GST: ₹${order.gstAmount.toFixed(2)}` : ''}
+                          {typeof order.deliveryCharge === 'number' ? ` • Delivery: ₹${order.deliveryCharge.toFixed(2)}` : ''}
+                          {typeof order.discountAmount === 'number' && order.discountAmount > 0 ? ` • Discount: -₹${order.discountAmount.toFixed(2)}` : ''}
                         </small>
                       </td>
                       <td>
@@ -879,10 +884,28 @@ const AdminOrders = () => {
                   <span>Subtotal:</span>
                   <span>₹{(selectedOrder.subtotal || 0).toFixed(2)}</span>
                 </div>
+                {(selectedOrder.sgstAmount || 0) > 0 && (
+                  <div className="d-flex justify-content-between">
+                    <span>SGST:</span>
+                    <span>₹{(selectedOrder.sgstAmount || 0).toFixed(2)}</span>
+                  </div>
+                )}
+                {(selectedOrder.cgstAmount || 0) > 0 && (
+                  <div className="d-flex justify-content-between">
+                    <span>CGST:</span>
+                    <span>₹{(selectedOrder.cgstAmount || 0).toFixed(2)}</span>
+                  </div>
+                )}
                 {(selectedOrder.gstAmount || 0) > 0 && (
                   <div className="d-flex justify-content-between">
-                    <span>GST:</span>
+                    <span>Total GST:</span>
                     <span>₹{(selectedOrder.gstAmount || 0).toFixed(2)}</span>
+                  </div>
+                )}
+                {typeof selectedOrder?.deliveryCharge === 'number' && (
+                  <div className="d-flex justify-content-between">
+                    <span>Delivery:</span>
+                    <span>₹{(selectedOrder.deliveryCharge || 0).toFixed(2)}</span>
                   </div>
                 )}
                 {(selectedOrder.discountAmount || 0) > 0 && (

@@ -41,7 +41,7 @@ const Cart = () => {
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const [updating, setUpdating] = useState({});
 
-  const { subtotal, gst, total, totalItems } = calculateTotals();
+  const { subtotal, sgst, cgst, gst, deliveryCharge, total, totalItems } = calculateTotals();
   // Load cart on component mount to ensure fresh data
   useEffect((isAuthenticated) => {
     if (isAuthenticated) {  // Assuming isAuthenticated from context or prop; adjust if needed
@@ -334,10 +334,28 @@ const Cart = () => {
                   <span>Subtotal ({totalItems} items):</span>
                   <span>₹{subtotal.toFixed(2)}</span>
                 </div>
+                {sgst > 0 && (
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>SGST:</span>
+                    <span>₹{sgst.toFixed(2)}</span>
+                  </div>
+                )}
+                {cgst > 0 && (
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>CGST:</span>
+                    <span>₹{cgst.toFixed(2)}</span>
+                  </div>
+                )}
                 {gst > 0 && (
                   <div className="d-flex justify-content-between mb-2">
-                    <span>GST:</span>
+                    <span>Total GST:</span>
                     <span>₹{gst.toFixed(2)}</span>
+                  </div>
+                )}
+                {deliveryCharge > 0 && (
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Delivery:</span>
+                    <span>₹{deliveryCharge.toFixed(2)}</span>
                   </div>
                 )}
                 <hr />
