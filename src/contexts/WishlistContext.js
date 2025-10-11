@@ -81,31 +81,39 @@ export const WishlistProvider = ({ children }) => {
     }
   };
 
-  const removeFromWishlist = async (wishlistItemId) => {
-    if (!isAuthenticated || !wishlistItemId) return { success: false, error: 'Invalid wishlist item ID' };
+const removeFromWishlist = async (id) => {
+  if (!isAuthenticated || !id) return { success: false, error: 'Invalid ID' };
 
-    try {
-      setLoading(true);
-      setError(null);
+  try {
+    setLoading(true);
+    setError(null);
 
-      // Optimistic update: Remove locally
-      setWishlist(prev => prev.filter(item => item.id !== wishlistItemId));
-
-      await axios.delete(`/api/wishlist/remove/${wishlistItemId}`);
-
-      // Sync
-      await loadWishlist();
-      return { success: true };
-    } catch (error) {
-      const message = error.response?.data?.error || 'Failed to remove item from wishlist';
-      setError(message);
-      // Rollback
-      await loadWishlist();
-      return { success: false, error: message };
-    } finally {
-      setLoading(false);
+    // Check if it's a product ID or wishlist item ID
+    const isProductId = !wishlist.some(item => item.id === id);
+    
+    if (isProductId) {
+      // If it's a product ID, use removeProductFromWishlist
+      return await removeProductFromWishlist(id);
     }
-  };
+
+    // Optimistic update: Remove locally
+    setWishlist(prev => prev.filter(item => item.id !== id));
+
+    await axios.delete(`/api/wishlist/remove/${id}`);
+    
+    // Sync
+    await loadWishlist();
+    return { success: true };
+  } catch (error) {
+    const message = error.response?.data?.error || 'Failed to remove item from wishlist';
+    setError(message);
+    // Rollback
+    await loadWishlist();
+    return { success: false, error: message };
+  } finally {
+    setLoading(false);
+  }
+};
 
   const removeProductFromWishlist = async (productId) => {
     if (!isAuthenticated) return;

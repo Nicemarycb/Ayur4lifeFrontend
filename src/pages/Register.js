@@ -424,9 +424,9 @@ const Register = () => {
                       label={
                         <span>
                           I agree to the{' '}
-                          <Link to="/terms" className="text-decoration-none">Terms of Service</Link>
+                          <Link to="/terms-of-service" className="text-decoration-none">Terms of Service</Link>
                           {' '}and{' '}
-                          <Link to="/privacy" className="text-decoration-none">Privacy Policy</Link>
+                          <Link to="/privacy-policy" className="text-decoration-none">Privacy Policy</Link>
                         </span>
                       }
                       isInvalid={!!errors.agreeToTerms}

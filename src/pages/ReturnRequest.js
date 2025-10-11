@@ -58,6 +58,146 @@ const ReturnRequest = () => {
     { key: 'wrongSize', label: 'Received wrong size/color', icon: '👕' }
   ];
 
+// Add these utility functions at the top of the component
+const formatDate = (dateField) => {
+  if (!dateField) return 'N/A';
+  
+  try {
+    // Handle Firestore Timestamp objects
+    if (dateField && typeof dateField.toDate === 'function') {
+      return dateField.toDate().toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+    } 
+    // Handle string dates
+    else if (typeof dateField === 'string' || typeof dateField === 'number') {
+      const date = new Date(dateField);
+      return date.toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+    }
+    // Handle Date objects
+    else if (dateField instanceof Date) {
+      return dateField.toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+    }
+    return 'N/A';
+  } catch (error) {
+    console.error('Error formatting date:', error, dateField);
+    return 'N/A';
+  }
+};
+
+const formatDateTime = (dateField) => {
+  if (!dateField) return 'N/A';
+  
+  try {
+    let date;
+    
+    // Handle Firestore Timestamp objects
+    if (dateField && typeof dateField.toDate === 'function') {
+      date = dateField.toDate();
+    } 
+    // Handle string dates
+    else if (typeof dateField === 'string' || typeof dateField === 'number') {
+      date = new Date(dateField);
+    }
+    // Handle Date objects
+    else if (dateField instanceof Date) {
+      date = dateField;
+    } else {
+      return 'N/A';
+    }
+    
+    return date.toLocaleString('en-IN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch (error) {
+    console.error('Error formatting date:', error, dateField);
+    return 'N/A';
+  }
+};
+
+ // ✅ ADD THIS PRICE FORMATTING FUNCTION
+  const formatPrice = (price) => {
+    if (price === undefined || price === null || price === '' || isNaN(price)) {
+      return '₹0';
+    }
+    
+    const numPrice = typeof price === 'string' ? 
+      parseFloat(price.replace(/[^0-9.-]+/g, "")) : 
+      Number(price);
+    
+    if (isNaN(numPrice) || numPrice <= 0) {
+      return '₹0';
+    }
+    
+    return `₹${numPrice.toLocaleString('en-IN', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    })}`;
+  };
+
+  // ✅ ADD THIS PRICE EXTRACTION FUNCTION (Same as your backend)
+  const extractProductPrice = (productItem) => {
+    if (!productItem) return 0;
+    
+    console.log('=== PRICE EXTRACTION DEBUG ===');
+    console.log('All available fields in product item:', Object.keys(productItem));
+    
+    // Try all possible price field names with proper validation
+    const priceFields = [
+      'productPrice', 'price', 'unitPrice', 'itemPrice', 
+      'salePrice', 'originalPrice', 'totalPrice', 'amount'
+    ];
+    
+    for (const field of priceFields) {
+      const value = productItem[field];
+      console.log(`Checking field '${field}':`, value);
+      
+      if (value !== undefined && value !== null && value !== '') {
+        const numValue = typeof value === 'string' ? 
+          parseFloat(value.replace(/[^0-9.-]+/g, "")) : 
+          Number(value);
+          
+        if (!isNaN(numValue) && numValue > 0) {
+          console.log(`✅ Found valid price in '${field}':`, numValue);
+          return numValue;
+        }
+      }
+    }
+    
+    // If no valid price found, check all numeric fields
+    console.log('No standard price field found, checking all numeric fields...');
+    for (const [key, value] of Object.entries(productItem)) {
+      if (typeof value === 'number' && value > 0) {
+        console.log(`⚠️ Using numeric value from '${key}':`, value);
+        return value;
+      }
+      if (typeof value === 'string') {
+        const numValue = parseFloat(value.replace(/[^0-9.-]+/g, ""));
+        if (!isNaN(numValue) && numValue > 0) {
+          console.log(`⚠️ Using parsed string value from '${key}':`, numValue);
+          return numValue;
+        }
+      }
+    }
+    
+    console.warn('❌ No valid price found, using default 0');
+    return 0;
+  };
+
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login');
@@ -553,15 +693,9 @@ const ReturnRequest = () => {
                     <Col md={8}>
                       <h6>{product.productName}</h6>
                       <p className="text-muted mb-1">Order: #{order.orderNumber}</p>
-                      <p className="text-muted mb-1">Ordered: {
-                        order.createdAt ? 
-                          (order.createdAt.toDate ? 
-                            order.createdAt.toDate().toLocaleDateString() : 
-                            new Date(order.createdAt).toLocaleDateString()) : 
-                          'N/A'
-                      }</p>
+                    <p className="text-muted mb-1">Ordered: {formatDate(order.createdAt)}</p>
                       <p className="text-muted mb-1">Quantity: {product.quantity}</p>
-                      <p className="text-muted mb-0">Price: ₹{product.productPrice}</p>
+                      <p className="text-muted mb-0">Price:  {formatPrice(extractProductPrice(product))}</p>
                     </Col>
                   </Row>
                 </Card.Body>

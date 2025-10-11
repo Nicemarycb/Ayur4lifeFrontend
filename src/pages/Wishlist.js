@@ -112,7 +112,7 @@ const handleRemoveFromWishlist = async (productId) => {
           <Col xs="auto">
             <div className="d-flex gap-2">
               <Button
-                variant="outline-primary"
+                variant="outline-success"
                 onClick={handleMoveAllToCart}
                 disabled={wishlist.length === 0}
               >
@@ -216,7 +216,7 @@ const handleRemoveFromWishlist = async (productId) => {
                 <div className="mt-auto">
                   <div className="d-grid gap-2">
                     <Button
-                      variant="primary"
+                      variant="success"
                       onClick={() => handleAddToCart(item.product)}
                       disabled={item.product.stock === 0 || addingToCart[item.product.id]}
                     >
@@ -233,7 +233,7 @@ const handleRemoveFromWishlist = async (productId) => {
                       )}
                     </Button>
                     <Button
-                      variant="outline-danger"
+                      variant="outline-secondary"
                       onClick={() => handleRemoveFromWishlist(item.product.id)}
                     >
                       <FontAwesomeIcon icon={faTrash} className="me-2" />
@@ -249,7 +249,7 @@ const handleRemoveFromWishlist = async (productId) => {
 
       {wishlist.length > 0 && (
         <div className="text-center mt-4">
-          <Link to="/" className="btn btn-outline-primary">
+          <Link to="/" className="btn btn-primary">
             Continue Shopping
           </Link>
         </div>

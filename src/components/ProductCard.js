@@ -50,7 +50,7 @@ const ProductCard = ({ product, onAddToCart, onWishlistToggle, isInWishlist, isA
           src={imageError ? fallbackImage : (product.images?.[0] || fallbackImage)} 
           alt={product.name}
           onError={handleImageError}
-          className="product-image"
+          style={{ height: '200px', objectFit: 'cover' }}
         />
         
         {/* Video indicator badge */}

@@ -18,6 +18,54 @@
   align-items: center;
   justify-content: center;
 }
+/* Container for zoom effect */
+.zoom-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  height: 500px;
+  cursor: crosshair;
+}
+
+/* The image will be used as background for zoom */
+.zoom-image {
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover; /* normal size */
+  transition: background-size 0.2s ease;
+}
+
+.product-media-container {
+  position: relative;
+}
+
+/* Normal main image */
+.zoom-source {
+  width: 100%;
+  height: 500px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: 8px;
+  cursor: crosshair;
+}
+
+/* Zoom preview (right side of image) */
+.zoom-preview {
+  width: 100%;
+  height: 500px;
+  border: 2px solid #ddd;
+  background-repeat: no-repeat;
+  background-size: 200%; /* zoom level */
+  background-position: center;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+
+
 
 .media-thumbnails-container {
   border-top: 1px solid #eee;

@@ -10,7 +10,7 @@ import {
   faMinus,
   faPlus,
   faVideo,
-  faPlayCircle
+  faPlayCircle,
 } from '@fortawesome/free-solid-svg-icons';
 import { faHeart as farHeart } from '@fortawesome/free-regular-svg-icons';
 import { useCart } from '../contexts/CartContext';
@@ -39,6 +39,22 @@ const ProductDetail = () => {
   const { isAuthenticated, user } = useUserAuth();
   const { addToCart } = useCart();
   const { wishlist, addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+
+ const [zoomVisible, setZoomVisible] = useState(false);
+const [zoomPosition, setZoomPosition] = useState({ x: "50%", y: "50%" });
+
+const handleMouseMove = (e, url) => {
+  const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+  const x = ((e.pageX - left) / width) * 100;
+  const y = ((e.pageY - top) / height) * 100;
+  setZoomPosition({ x: `${x}%`, y: `${y}%` });
+  setZoomVisible(true);
+};
+
+const handleMouseLeave = () => {
+  setZoomVisible(false);
+};
+
 
   useEffect(() => {
     loadProduct();
@@ -316,25 +332,33 @@ const ProductDetail = () => {
             <Card className="border-0 shadow-sm">
               <Card.Body className="p-0">
                 <div className="position-relative product-media-container">
-  {mediaItems[selectedMedia]?.type === 'video' ? (
+{mediaItems[selectedMedia]?.type === 'video' ? (
   <video
     controls
     className="img-fluid w-100 main-product-media"
-         poster={product.images?.[0] || '/Ayur4life_logo_round_png-01.png'}
+    poster={product.images?.[0] || '/Ayur4life_logo_round_png-01.png'}
   >
     <source src={mediaItems[selectedMedia]?.url} type="video/mp4" />
     Your browser does not support the video tag.
   </video>
 ) : (
-  <img
-    src={mediaItems[selectedMedia]?.url}
-    alt={product.name}
-    className="img-fluid w-100 main-product-media"
-    onError={(e) => {
-      e.target.src = '/Ayur4life_logo_round_png-01.png';
-    }}
-  />
+  <div
+    className="zoom-source"
+    onMouseMove={(e) => handleMouseMove(e, mediaItems[selectedMedia]?.url)}
+    onMouseLeave={handleMouseLeave}
+    style={{ backgroundImage: `url(${mediaItems[selectedMedia]?.url})` }}
+  ></div>
 )}
+{zoomVisible && (
+  <div
+    className="zoom-preview"
+    style={{
+      backgroundImage: `url(${mediaItems[selectedMedia]?.url})`,
+      backgroundPosition: `${zoomPosition.x} ${zoomPosition.y}`,
+    }}
+  ></div>
+)}
+
 
                   
                   <Button
@@ -380,6 +404,25 @@ const ProductDetail = () => {
                     </div>
                   </div>
                 )}
+                     <div className="d-grid gap-2 mb-4">
+                <Button
+                  variant="success"
+                  size="lg"
+                  onClick={handleAddToCart}
+                  disabled={product.stock === 0}
+                >
+                  <FontAwesomeIcon icon={faShoppingCart} className="me-2" />
+                  Add to Cart
+                </Button>
+                <Button
+                  variant="outline-success"
+                  size="lg"
+                  onClick={handleWishlistToggle}
+                >
+                  <FontAwesomeIcon icon={isInWishlist(product.id) ? faHeart : farHeart} className="me-2" />
+                  {isInWishlist(product.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
+                </Button>
+              </div>
               </Card.Body>
             </Card>
           </Col>
@@ -534,25 +577,7 @@ const ProductDetail = () => {
                 </Card.Body>
               </Card>
 
-              <div className="d-grid gap-2 mb-4">
-                <Button
-                  variant="success"
-                  size="lg"
-                  onClick={handleAddToCart}
-                  disabled={product.stock === 0}
-                >
-                  <FontAwesomeIcon icon={faShoppingCart} className="me-2" />
-                  Add to Cart
-                </Button>
-                <Button
-                  variant="outline-success"
-                  size="lg"
-                  onClick={handleWishlistToggle}
-                >
-                  <FontAwesomeIcon icon={isInWishlist(product.id) ? faHeart : farHeart} className="me-2" />
-                  {isInWishlist(product.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
-                </Button>
-              </div>
+         
 
               <div className="mb-4">
                 <h5 className="fw-semibold mb-3">Description</h5>
@@ -612,7 +637,7 @@ const ProductDetail = () => {
                 <h4 className="mb-0">Customer Reviews</h4>
                 {canReview() && (
                   <Button
-                    variant="outline-primary"
+                    variant="outline-success"
                     onClick={() => setShowReviewForm(!showReviewForm)}
                   >
                     {showReviewForm ? 'Cancel Review' : 'Write a Review'}

@@ -1,5 +1,304 @@
+// // import React, { useState, useEffect } from 'react';
+// // import { useParams, Link } from 'react-router-dom';
+// // import { Container, Row, Col, Card, Badge, Button, Spinner, Alert } from 'react-bootstrap';
+// // import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+// // import { faHeart, faShoppingCart, faStar } from '@fortawesome/free-solid-svg-icons';
+// // import { faHeart as farHeart } from '@fortawesome/free-regular-svg-icons';
+// // import axios from 'axios';
+// // import { useCart } from '../contexts/CartContext';
+// // import { useWishlist } from '../contexts/WishlistContext';
+// // import UserLayout from '../layouts/UserLayout';
+
+// // const CategoryProducts = () => {
+// //   const { category } = useParams();
+// //   const [products, setProducts] = useState([]);
+// //   const [loading, setLoading] = useState(true);
+// //   const [error, setError] = useState(null);
+// //   const [sortBy, setSortBy] = useState('name');
+// //   const [sortOrder, setSortOrder] = useState('asc');
+  
+// //   const { addToCart } = useCart();
+// //   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+
+// //   useEffect(() => {
+// //     fetchProducts();
+// //   }, [category]);
+
+// //   const fetchProducts = async () => {
+// //   try {
+// //     setLoading(true);
+// //     setError(null);
+// //     const response = await axios.get(`/api/products/category/${encodeURIComponent(category)}`);
+// //     setProducts(response.data.products); // <-- Use .products here!
+// //   } catch (err) {
+// //     setError(err.response?.data?.message || 'Failed to fetch products');
+// //   } finally {
+// //     setLoading(false);
+// //   }
+// // };
+
+// //   const handleSort = (field) => {
+// //     if (sortBy === field) {
+// //       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+// //     } else {
+// //       setSortBy(field);
+// //       setSortOrder('asc');
+// //     }
+// //   };
+
+// //   const sortedProducts = [...products].sort((a, b) => {
+// //     let aValue = a[sortBy];
+// //     let bValue = b[sortBy];
+
+// //     if (sortBy === 'price') {
+// //       aValue = parseFloat(a.price);
+// //       bValue = parseFloat(b.price);
+// //     } else if (sortBy === 'rating') {
+// //       aValue = parseFloat(a.rating || 0);
+// //       bValue = parseFloat(b.rating || 0);
+// //     } else {
+// //       aValue = String(aValue || '').toLowerCase();
+// //       bValue = String(bValue || '').toLowerCase();
+// //     }
+
+// //     if (sortOrder === 'asc') {
+// //       return aValue > bValue ? 1 : -1;
+// //     } else {
+// //       return aValue < bValue ? 1 : -1;
+// //     }
+// //   });
+
+// //   const handleAddToCart = async (product) => {
+// //     try {
+// //       await addToCart(product.id, 1);
+// //     } catch (err) {
+// //       console.error('Failed to add to cart:', err);
+// //     }
+// //   };
+
+// //   const handleWishlistToggle = async (product) => {
+// //     try {
+// //       if (isInWishlist(product.id)) {
+// //         await removeFromWishlist(product.id);
+// //       } else {
+// //         await addToWishlist(product.id);
+// //       }
+// //     } catch (err) {
+// //       console.error('Failed to toggle wishlist:', err);
+// //     }
+// //   };
+
+// //   const getCategoryDisplayName = (categoryName) => {
+// //     return categoryName.charAt(0).toUpperCase() + categoryName.slice(1).replace(/-/g, ' ');
+// //   };
+
+// //   if (loading) {
+// //     return (
+// //       <UserLayout>
+// //         <Container className="py-5">
+// //           <div className="text-center">
+// //             <Spinner animation="border" role="status" className="text-primary">
+// //               <span className="visually-hidden">Loading...</span>
+// //             </Spinner>
+// //             <p className="mt-3">Loading products...</p>
+// //           </div>
+// //         </Container>
+// //       </UserLayout>
+// //     );
+// //   }
+
+// //   if (error) {
+// //     return (
+// //       <UserLayout>
+// //         <Container className="py-5">
+// //           <Alert variant="danger">
+// //             <Alert.Heading>Error</Alert.Heading>
+// //             <p>{error}</p>
+// //             <Button variant="outline-danger" onClick={fetchProducts}>
+// //               Try Again
+// //             </Button>
+// //           </Alert>
+// //         </Container>
+// //       </UserLayout>
+// //     );
+// //   }
+
+// //   return (
+// //     <UserLayout>
+// //       <Container className="py-5">
+// //       <div className="mb-4">
+// //         <h1 className="text-center mb-3">
+// //           {getCategoryDisplayName(category)} Products
+// //         </h1>
+// //         <p className="text-center text-muted">
+// //           Discover our premium {getCategoryDisplayName(category).toLowerCase()} collection
+// //         </p>
+// //       </div>
+
+// //       {products.length > 0 && (
+// //         <div className="mb-4">
+// //           <Row className="align-items-center">
+// //             <Col md={6}>
+// //               <p className="mb-0">
+// //                 Showing {products.length} product{products.length !== 1 ? 's' : ''}
+// //               </p>
+// //             </Col>
+// //             <Col md={6} className="text-md-end">
+// //               <div className="d-flex gap-2 justify-content-md-end">
+// //                 <span className="text-muted">Sort by:</span>
+// //                 <Button
+// //                   variant={sortBy === 'name' ? 'primary' : 'outline-primary'}
+// //                   size="sm"
+// //                   onClick={() => handleSort('name')}
+// //                 >
+// //                   Name {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
+// //                 </Button>
+// //                 <Button
+// //                   variant={sortBy === 'price' ? 'primary' : 'outline-primary'}
+// //                   size="sm"
+// //                   onClick={() => handleSort('price')}
+// //                 >
+// //                   Price {sortBy === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}
+// //                 </Button>
+// //                 <Button
+// //                   variant={sortBy === 'rating' ? 'primary' : 'outline-primary'}
+// //                   size="sm"
+// //                   onClick={() => handleSort('rating')}
+// //                 >
+// //                   Rating {sortBy === 'rating' && (sortOrder === 'asc' ? '↑' : '↓')}
+// //                 </Button>
+// //               </div>
+// //             </Col>
+// //           </Row>
+// //         </div>
+// //       )}
+
+// //       {sortedProducts.length === 0 ? (
+// //         <div className="text-center py-5">
+// //           <h3 className="text-muted">No products found</h3>
+// //           <p className="text-muted">
+// //             No products available in the {getCategoryDisplayName(category).toLowerCase()} category.
+// //           </p>
+// //           <Link to="/" className="btn btn-primary">
+// //             Browse All Products
+// //           </Link>
+// //         </div>
+// //       ) : (
+// //         <Row>
+// //           {sortedProducts.map((product) => (
+// //             <Col key={product.id} lg={4} md={6} className="mb-4">
+// //               <Card className="h-100 product-card">
+// //                 <div className="product-image-container">
+// //                   <Card.Img
+// //                     variant="top"
+// //                     src={product.images?.[0] || '/placeholder-product.jpg'}
+// //                     alt={product.name}
+// //                     className="product-image"
+// //                   />
+// //                   <div className="product-overlay">
+// //                     <Button
+// //                       variant="outline-light"
+// //                       size="sm"
+// //                       className="overlay-btn"
+// //                       onClick={() => handleWishlistToggle(product)}
+// //                     >
+// //                       <FontAwesomeIcon
+// //                         icon={isInWishlist(product.id) ? faHeart : farHeart}
+// //                         className={isInWishlist(product.id) ? 'text-danger' : ''}
+// //                       />
+// //                     </Button>
+// //                     <Button
+// //                       variant="outline-light"
+// //                       size="sm"
+// //                       className="overlay-btn"
+// //                       onClick={() => handleAddToCart(product)}
+// //                     >
+// //                       <FontAwesomeIcon icon={faShoppingCart} />
+// //                     </Button>
+// //                   </div>
+// //                   {product.stock < 10 && product.stock > 0 && (
+// //                     <Badge bg="warning" className="position-absolute top-0 end-0 m-2">
+// //                       Low Stock
+// //                     </Badge>
+// //                   )}
+// //                   {product.stock === 0 && (
+// //                     <Badge bg="danger" className="position-absolute top-0 end-0 m-2">
+// //                       Out of Stock
+// //                     </Badge>
+// //                   )}
+// //                 </div>
+// //                 <Card.Body className="d-flex flex-column">
+// //                   <div className="mb-2">
+// //                     <Badge bg="secondary" className="mb-2">
+// //                       {product.category}
+// //                     </Badge>
+// //                   </div>
+// //                   <Card.Title className="product-title">
+// //                     <Link to={`/product/${product.id}`} className="text-decoration-none">
+// //                       {product.name}
+// //                     </Link>
+// //                   </Card.Title>
+// //                   <div className="mb-2">
+// //                     <div className="d-flex align-items-center">
+// //                       {[...Array(5)].map((_, i) => (
+// //                         <FontAwesomeIcon
+// //                           key={i}
+// //                           icon={faStar}
+// //                           className={i < Math.floor(product.rating || 0) ? 'text-warning' : 'text-muted'}
+// //                           size="sm"
+// //                         />
+// //                       ))}
+// //                       <span className="ms-2 text-muted small">
+// //                         ({product.rating || 0})
+// //                       </span>
+// //                     </div>
+// //                   </div>
+// //                   <div className="mb-3">
+// //                     <span className="h5 text-primary mb-0">₹{product.price}</span>
+// //                     {product.gst && (
+// //                       <span className="text-muted small ms-2">+ {product.gst}% GST</span>
+// //                     )}
+// //                   </div>
+// //                   <Card.Text className="flex-grow-1">
+// //                     {product.description?.substring(0, 100)}
+// //                     {product.description?.length > 100 && '...'}
+// //                   </Card.Text>
+// //                   <div className="mt-auto">
+// //                     <div className="d-grid gap-2">
+// //                       <Button
+// //                         variant="primary"
+// //                         onClick={() => handleAddToCart(product)}
+// //                         disabled={product.stock === 0}
+// //                       >
+// //                         <FontAwesomeIcon icon={faShoppingCart} className="me-2" />
+// //                         Add to Cart
+// //                       </Button>
+// //                       <Button
+// //                         variant={isInWishlist(product.id) ? 'danger' : 'outline-danger'}
+// //                         onClick={() => handleWishlistToggle(product)}
+// //                       >
+// //                         <FontAwesomeIcon
+// //                           icon={isInWishlist(product.id) ? faHeart : farHeart}
+// //                           className="me-2"
+// //                         />
+// //                         {isInWishlist(product.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
+// //                       </Button>
+// //                     </div>
+// //                   </div>
+// //                 </Card.Body>
+// //               </Card>
+// //             </Col>
+// //           ))}
+// //         </Row>
+// //       )}
+// //     </Container>
+// //     </UserLayout>
+// //   );
+// // };
+
+// // export default CategoryProducts;
 // import React, { useState, useEffect } from 'react';
-// import { useParams, Link } from 'react-router-dom';
+// import { useParams, Link, useNavigate } from 'react-router-dom';
 // import { Container, Row, Col, Card, Badge, Button, Spinner, Alert } from 'react-bootstrap';
 // import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 // import { faHeart, faShoppingCart, faStar } from '@fortawesome/free-solid-svg-icons';
@@ -7,6 +306,7 @@
 // import axios from 'axios';
 // import { useCart } from '../contexts/CartContext';
 // import { useWishlist } from '../contexts/WishlistContext';
+// import { useUserAuth } from '../contexts/UserAuthContext';
 // import UserLayout from '../layouts/UserLayout';
 
 // const CategoryProducts = () => {
@@ -14,28 +314,31 @@
 //   const [products, setProducts] = useState([]);
 //   const [loading, setLoading] = useState(true);
 //   const [error, setError] = useState(null);
+//   const [wishlistError, setWishlistError] = useState(null);
 //   const [sortBy, setSortBy] = useState('name');
 //   const [sortOrder, setSortOrder] = useState('asc');
-  
+//   const [togglingWishlist, setTogglingWishlist] = useState({});
 //   const { addToCart } = useCart();
-//   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+//   const { addToWishlist, removeProductFromWishlist, isInWishlist, error: contextWishlistError, clearError } = useWishlist();
+//   const { isAuthenticated } = useUserAuth();
+//   const navigate = useNavigate();
 
 //   useEffect(() => {
 //     fetchProducts();
 //   }, [category]);
 
 //   const fetchProducts = async () => {
-//   try {
-//     setLoading(true);
-//     setError(null);
-//     const response = await axios.get(`/api/products/category/${encodeURIComponent(category)}`);
-//     setProducts(response.data.products); // <-- Use .products here!
-//   } catch (err) {
-//     setError(err.response?.data?.message || 'Failed to fetch products');
-//   } finally {
-//     setLoading(false);
-//   }
-// };
+//     try {
+//       setLoading(true);
+//       setError(null);
+//       const response = await axios.get(`/api/products/category/${encodeURIComponent(category)}`);
+//       setProducts(response.data.products);
+//     } catch (err) {
+//       setError(err.response?.data?.message || 'Failed to fetch products');
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
 
 //   const handleSort = (field) => {
 //     if (sortBy === field) {
@@ -69,22 +372,50 @@
 //   });
 
 //   const handleAddToCart = async (product) => {
+//     if (!isAuthenticated) {
+//       setError('Please log in to add items to cart');
+//       setTimeout(() => navigate('/login'), 2000);
+//       return;
+//     }
 //     try {
 //       await addToCart(product.id, 1);
+//       alert('Product added to cart!');
 //     } catch (err) {
+//       setError('Failed to add to cart');
 //       console.error('Failed to add to cart:', err);
 //     }
 //   };
 
 //   const handleWishlistToggle = async (product) => {
+//     if (!isAuthenticated) {
+//       setWishlistError('Please log in to add items to your wishlist');
+//       setTimeout(() => navigate('/login'), 2000);
+//       return;
+//     }
+
 //     try {
+//       setTogglingWishlist(prev => ({ ...prev, [product.id]: true }));
+//       clearError();
 //       if (isInWishlist(product.id)) {
-//         await removeFromWishlist(product.id);
+//         const result = await removeProductFromWishlist(product.id);
+//         if (result.success) {
+//           alert('Product removed from wishlist!');
+//         } else {
+//           setWishlistError(result.error || 'Failed to remove from wishlist');
+//         }
 //       } else {
-//         await addToWishlist(product.id);
+//         const result = await addToWishlist(product.id);
+//         if (result.success) {
+//           alert('Product added to wishlist!');
+//         } else {
+//           setWishlistError(result.error || 'Failed to add to wishlist');
+//         }
 //       }
 //     } catch (err) {
+//       setWishlistError('Failed to update wishlist');
 //       console.error('Failed to toggle wishlist:', err);
+//     } finally {
+//       setTogglingWishlist(prev => ({ ...prev, [product.id]: false }));
 //     }
 //   };
 
@@ -111,7 +442,7 @@
 //     return (
 //       <UserLayout>
 //         <Container className="py-5">
-//           <Alert variant="danger">
+//           <Alert variant="danger" dismissible onClose={() => setError(null)}>
 //             <Alert.Heading>Error</Alert.Heading>
 //             <p>{error}</p>
 //             <Button variant="outline-danger" onClick={fetchProducts}>
@@ -126,188 +457,203 @@
 //   return (
 //     <UserLayout>
 //       <Container className="py-5">
-//       <div className="mb-4">
-//         <h1 className="text-center mb-3">
-//           {getCategoryDisplayName(category)} Products
-//         </h1>
-//         <p className="text-center text-muted">
-//           Discover our premium {getCategoryDisplayName(category).toLowerCase()} collection
-//         </p>
-//       </div>
+//         {(wishlistError || contextWishlistError) && (
+//           <Alert variant="danger" dismissible onClose={() => { setWishlistError(null); clearError(); }}>
+//             {wishlistError || contextWishlistError}
+//           </Alert>
+//         )}
 
-//       {products.length > 0 && (
 //         <div className="mb-4">
-//           <Row className="align-items-center">
-//             <Col md={6}>
-//               <p className="mb-0">
-//                 Showing {products.length} product{products.length !== 1 ? 's' : ''}
-//               </p>
-//             </Col>
-//             <Col md={6} className="text-md-end">
-//               <div className="d-flex gap-2 justify-content-md-end">
-//                 <span className="text-muted">Sort by:</span>
-//                 <Button
-//                   variant={sortBy === 'name' ? 'primary' : 'outline-primary'}
-//                   size="sm"
-//                   onClick={() => handleSort('name')}
-//                 >
-//                   Name {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
-//                 </Button>
-//                 <Button
-//                   variant={sortBy === 'price' ? 'primary' : 'outline-primary'}
-//                   size="sm"
-//                   onClick={() => handleSort('price')}
-//                 >
-//                   Price {sortBy === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}
-//                 </Button>
-//                 <Button
-//                   variant={sortBy === 'rating' ? 'primary' : 'outline-primary'}
-//                   size="sm"
-//                   onClick={() => handleSort('rating')}
-//                 >
-//                   Rating {sortBy === 'rating' && (sortOrder === 'asc' ? '↑' : '↓')}
-//                 </Button>
-//               </div>
-//             </Col>
-//           </Row>
-//         </div>
-//       )}
-
-//       {sortedProducts.length === 0 ? (
-//         <div className="text-center py-5">
-//           <h3 className="text-muted">No products found</h3>
-//           <p className="text-muted">
-//             No products available in the {getCategoryDisplayName(category).toLowerCase()} category.
+//           <h1 className="text-center mb-3">
+//             {getCategoryDisplayName(category)} Products
+//           </h1>
+//           <p className="text-center text-muted">
+//             Discover our premium {getCategoryDisplayName(category).toLowerCase()} collection
 //           </p>
-//           <Link to="/" className="btn btn-primary">
-//             Browse All Products
-//           </Link>
 //         </div>
-//       ) : (
-//         <Row>
-//           {sortedProducts.map((product) => (
-//             <Col key={product.id} lg={4} md={6} className="mb-4">
-//               <Card className="h-100 product-card">
-//                 <div className="product-image-container">
-//                   <Card.Img
-//                     variant="top"
-//                     src={product.images?.[0] || '/placeholder-product.jpg'}
-//                     alt={product.name}
-//                     className="product-image"
-//                   />
-//                   <div className="product-overlay">
-//                     <Button
-//                       variant="outline-light"
-//                       size="sm"
-//                       className="overlay-btn"
-//                       onClick={() => handleWishlistToggle(product)}
-//                     >
-//                       <FontAwesomeIcon
-//                         icon={isInWishlist(product.id) ? faHeart : farHeart}
-//                         className={isInWishlist(product.id) ? 'text-danger' : ''}
-//                       />
-//                     </Button>
-//                     <Button
-//                       variant="outline-light"
-//                       size="sm"
-//                       className="overlay-btn"
-//                       onClick={() => handleAddToCart(product)}
-//                     >
-//                       <FontAwesomeIcon icon={faShoppingCart} />
-//                     </Button>
-//                   </div>
-//                   {product.stock < 10 && product.stock > 0 && (
-//                     <Badge bg="warning" className="position-absolute top-0 end-0 m-2">
-//                       Low Stock
-//                     </Badge>
-//                   )}
-//                   {product.stock === 0 && (
-//                     <Badge bg="danger" className="position-absolute top-0 end-0 m-2">
-//                       Out of Stock
-//                     </Badge>
-//                   )}
+
+//         {products.length > 0 && (
+//           <div className="mb-4">
+//             <Row className="align-items-center">
+//               <Col md={6}>
+//                 <p className="mb-0">
+//                   Showing {products.length} product{products.length !== 1 ? 's' : ''}
+//                 </p>
+//               </Col>
+//               <Col md={6} className="text-md-end">
+//                 <div className="d-flex gap-2 justify-content-md-end">
+//                   <span className="text-muted">Sort by:</span>
+//                   <Button
+//                     variant={sortBy === 'name' ? 'primary' : 'outline-primary'}
+//                     size="sm"
+//                     onClick={() => handleSort('name')}
+//                   >
+//                     Name {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
+//                   </Button>
+//                   <Button
+//                     variant={sortBy === 'price' ? 'primary' : 'outline-primary'}
+//                     size="sm"
+//                     onClick={() => handleSort('price')}
+//                   >
+//                     Price {sortBy === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}
+//                   </Button>
+//                   <Button
+//                     variant={sortBy === 'rating' ? 'primary' : 'outline-primary'}
+//                     size="sm"
+//                     onClick={() => handleSort('rating')}
+//                   >
+//                     Rating {sortBy === 'rating' && (sortOrder === 'asc' ? '↑' : '↓')}
+//                   </Button>
 //                 </div>
-//                 <Card.Body className="d-flex flex-column">
-//                   <div className="mb-2">
-//                     <Badge bg="secondary" className="mb-2">
-//                       {product.category}
-//                     </Badge>
-//                   </div>
-//                   <Card.Title className="product-title">
-//                     <Link to={`/product/${product.id}`} className="text-decoration-none">
-//                       {product.name}
-//                     </Link>
-//                   </Card.Title>
-//                   <div className="mb-2">
-//                     <div className="d-flex align-items-center">
-//                       {[...Array(5)].map((_, i) => (
-//                         <FontAwesomeIcon
-//                           key={i}
-//                           icon={faStar}
-//                           className={i < Math.floor(product.rating || 0) ? 'text-warning' : 'text-muted'}
-//                           size="sm"
-//                         />
-//                       ))}
-//                       <span className="ms-2 text-muted small">
-//                         ({product.rating || 0})
-//                       </span>
-//                     </div>
-//                   </div>
-//                   <div className="mb-3">
-//                     <span className="h5 text-primary mb-0">₹{product.price}</span>
-//                     {product.gst && (
-//                       <span className="text-muted small ms-2">+ {product.gst}% GST</span>
-//                     )}
-//                   </div>
-//                   <Card.Text className="flex-grow-1">
-//                     {product.description?.substring(0, 100)}
-//                     {product.description?.length > 100 && '...'}
-//                   </Card.Text>
-//                   <div className="mt-auto">
-//                     <div className="d-grid gap-2">
+//               </Col>
+//             </Row>
+//           </div>
+//         )}
+
+//         {sortedProducts.length === 0 ? (
+//           <div className="text-center py-5">
+//             <h3 className="text-muted">No products found</h3>
+//             <p className="text-muted">
+//               No products available in the {getCategoryDisplayName(category).toLowerCase()} category.
+//             </p>
+//             <Link to="/" className="btn btn-primary">
+//               Browse All Products
+//             </Link>
+//           </div>
+//         ) : (
+//           <Row>
+//             {sortedProducts.map((product) => (
+//               <Col key={product.id} lg={4} md={6} className="mb-4">
+//                 <Card className="h-100 product-card">
+//                   <div className="product-image-container">
+//                     <Card.Img
+//                       variant="top"
+//                       src={product.images?.[0] || '/placeholder-product.jpg'}
+//                       alt={product.name}
+//                       style={{ height: '200px', objectFit: 'cover' }}
+//                     />
+//                     <div className="product-overlay">
 //                       <Button
-//                         variant="primary"
+//                         variant="outline-light"
+//                         size="sm"
+//                         className="overlay-btn"
+//                         onClick={() => handleWishlistToggle(product)}
+//                         disabled={togglingWishlist[product.id]}
+//                       >
+//                         {togglingWishlist[product.id] ? (
+//                           <Spinner animation="border" size="sm" />
+//                         ) : (
+//                           <FontAwesomeIcon
+//                             icon={isInWishlist(product.id) ? faHeart : farHeart}
+//                             className={isInWishlist(product.id) ? 'text-danger' : ''}
+//                           />
+//                         )}
+//                       </Button>
+//                       <Button
+//                         variant="outline-light"
+//                         size="sm"
+//                         className="overlay-btn"
 //                         onClick={() => handleAddToCart(product)}
 //                         disabled={product.stock === 0}
 //                       >
-//                         <FontAwesomeIcon icon={faShoppingCart} className="me-2" />
-//                         Add to Cart
-//                       </Button>
-//                       <Button
-//                         variant={isInWishlist(product.id) ? 'danger' : 'outline-danger'}
-//                         onClick={() => handleWishlistToggle(product)}
-//                       >
-//                         <FontAwesomeIcon
-//                           icon={isInWishlist(product.id) ? faHeart : farHeart}
-//                           className="me-2"
-//                         />
-//                         {isInWishlist(product.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
+//                         <FontAwesomeIcon icon={faShoppingCart} />
 //                       </Button>
 //                     </div>
+//                     {product.stock < 10 && product.stock > 0 && (
+//                       <Badge bg="warning" className="position-absolute top-0 end-0 m-2">
+//                         Low Stock
+//                       </Badge>
+//                     )}
+//                     {product.stock === 0 && (
+//                       <Badge bg="danger" className="position-absolute top-0 end-0 m-2">
+//                         Out of Stock
+//                       </Badge>
+//                     )}
 //                   </div>
-//                 </Card.Body>
-//               </Card>
-//             </Col>
-//           ))}
-//         </Row>
-//       )}
-//     </Container>
+//                   <Card.Body className="d-flex flex-column">
+//                     <div className="mb-2">
+//                       <Badge bg="secondary" className="mb-2">
+//                         {product.category}
+//                       </Badge>
+//                     </div>
+//                     <Card.Title className="product-title">
+//                       <Link to={`/product/${product.id}`} className="text-decoration-none">
+//                         {product.name}
+//                       </Link>
+//                     </Card.Title>
+//                     <div className="mb-2">
+//                       <div className="d-flex align-items-center">
+//                         {[...Array(5)].map((_, i) => (
+//                           <FontAwesomeIcon
+//                             key={i}
+//                             icon={faStar}
+//                             className={i < Math.floor(product.rating || 0) ? 'text-warning' : 'text-muted'}
+//                             size="sm"
+//                           />
+//                         ))}
+//                         <span className="ms-2 text-muted small">
+//                           ({product.rating || 0})
+//                         </span>
+//                       </div>
+//                     </div>
+//                     <div className="mb-3">
+//                       <span className="h5 text-primary mb-0">₹{product.price}</span>
+//                       {product.gst && (
+//                         <span className="text-muted small ms-2">+ {product.gst}% GST</span>
+//                       )}
+//                     </div>
+//                     <Card.Text className="flex-grow-1">
+//                       {product.description?.substring(0, 100)}
+//                       {product.description?.length > 100 && '...'}
+//                     </Card.Text>
+//                     <div className="mt-auto">
+//                       <div className="d-grid gap-2">
+//                         <Button
+//                           variant="primary"
+//                           onClick={() => handleAddToCart(product)}
+//                           disabled={product.stock === 0}
+//                         >
+//                           <FontAwesomeIcon icon={faShoppingCart} className="me-2" />
+//                           Add to Cart
+//                         </Button>
+//                         <Button
+//                           variant={isInWishlist(product.id) ? 'danger' : 'outline-danger'}
+//                           onClick={() => handleWishlistToggle(product)}
+//                           disabled={togglingWishlist[product.id]}
+//                         >
+//                           <FontAwesomeIcon
+//                             icon={isInWishlist(product.id) ? faHeart : farHeart}
+//                             className="me-2"
+//                           />
+//                           {isInWishlist(product.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
+//                         </Button>
+//                       </div>
+//                     </div>
+//                   </Card.Body>
+//                 </Card>
+//               </Col>
+//             ))}
+//           </Row>
+//         )}
+//       </Container>
 //     </UserLayout>
 //   );
 // };
 
 // export default CategoryProducts;
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Badge, Button, Spinner, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Button, Spinner, Alert } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHeart, faShoppingCart, faStar } from '@fortawesome/free-solid-svg-icons';
-import { faHeart as farHeart } from '@fortawesome/free-regular-svg-icons';
+import { faHome, faArrowUp, faBoxOpen, faExclamationTriangle, faShoppingBag } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
 import { useUserAuth } from '../contexts/UserAuthContext';
 import UserLayout from '../layouts/UserLayout';
+import ProductCard from '../components/ProductCard';
+import './CategoryProducts.css';
 
 const CategoryProducts = () => {
   const { category } = useParams();
@@ -317,7 +663,9 @@ const CategoryProducts = () => {
   const [wishlistError, setWishlistError] = useState(null);
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
-  const [togglingWishlist, setTogglingWishlist] = useState({});
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const { addToCart } = useCart();
   const { addToWishlist, removeProductFromWishlist, isInWishlist, error: contextWishlistError, clearError } = useWishlist();
   const { isAuthenticated } = useUserAuth();
@@ -326,6 +674,15 @@ const CategoryProducts = () => {
   useEffect(() => {
     fetchProducts();
   }, [category]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const fetchProducts = async () => {
     try {
@@ -338,6 +695,16 @@ const CategoryProducts = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const showSuccessMessage = (message) => {
+    setSuccessMessage(message);
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000);
   };
 
   const handleSort = (field) => {
@@ -371,42 +738,41 @@ const CategoryProducts = () => {
     }
   });
 
-  const handleAddToCart = async (product) => {
+  const handleAddToCart = async (productId) => {
     if (!isAuthenticated) {
       setError('Please log in to add items to cart');
       setTimeout(() => navigate('/login'), 2000);
       return;
     }
     try {
-      await addToCart(product.id, 1);
-      alert('Product added to cart!');
+      await addToCart(productId, 1);
+      showSuccessMessage('🎉 Product added to cart successfully!');
     } catch (err) {
       setError('Failed to add to cart');
       console.error('Failed to add to cart:', err);
     }
   };
 
-  const handleWishlistToggle = async (product) => {
+  const handleWishlistToggle = async (productId) => {
     if (!isAuthenticated) {
-      setWishlistError('Please log in to add items to your wishlist');
+      setWishlistError('Please log in to manage your wishlist');
       setTimeout(() => navigate('/login'), 2000);
       return;
     }
 
     try {
-      setTogglingWishlist(prev => ({ ...prev, [product.id]: true }));
       clearError();
-      if (isInWishlist(product.id)) {
-        const result = await removeProductFromWishlist(product.id);
+      if (isInWishlist(productId)) {
+        const result = await removeProductFromWishlist(productId);
         if (result.success) {
-          alert('Product removed from wishlist!');
+          showSuccessMessage('Removed from wishlist! 💔');
         } else {
           setWishlistError(result.error || 'Failed to remove from wishlist');
         }
       } else {
-        const result = await addToWishlist(product.id);
+        const result = await addToWishlist(productId);
         if (result.success) {
-          alert('Product added to wishlist!');
+          showSuccessMessage('❤️ Added to wishlist!');
         } else {
           setWishlistError(result.error || 'Failed to add to wishlist');
         }
@@ -414,8 +780,6 @@ const CategoryProducts = () => {
     } catch (err) {
       setWishlistError('Failed to update wishlist');
       console.error('Failed to toggle wishlist:', err);
-    } finally {
-      setTogglingWishlist(prev => ({ ...prev, [product.id]: false }));
     }
   };
 
@@ -426,14 +790,14 @@ const CategoryProducts = () => {
   if (loading) {
     return (
       <UserLayout>
-        <Container className="py-5">
-          <div className="text-center">
-            <Spinner animation="border" role="status" className="text-primary">
-              <span className="visually-hidden">Loading...</span>
-            </Spinner>
-            <p className="mt-3">Loading products...</p>
-          </div>
-        </Container>
+        <div className="category-page">
+          <Container>
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <div className="loading-text">Loading {getCategoryDisplayName(category)} products...</div>
+            </div>
+          </Container>
+        </div>
       </UserLayout>
     );
   }
@@ -441,201 +805,155 @@ const CategoryProducts = () => {
   if (error) {
     return (
       <UserLayout>
-        <Container className="py-5">
-          <Alert variant="danger" dismissible onClose={() => setError(null)}>
-            <Alert.Heading>Error</Alert.Heading>
-            <p>{error}</p>
-            <Button variant="outline-danger" onClick={fetchProducts}>
-              Try Again
-            </Button>
-          </Alert>
-        </Container>
+        <div className="category-page">
+          <Container>
+            <div className="error-state fade-in-up">
+              <FontAwesomeIcon icon={faExclamationTriangle} className="error-icon" />
+              <h3 className="error-title">Oops! Something went wrong</h3>
+              <p>{error}</p>
+              <Button variant="success" onClick={fetchProducts} className="mt-3">
+                Try Again
+              </Button>
+            </div>
+          </Container>
+        </div>
       </UserLayout>
     );
   }
 
   return (
     <UserLayout>
-      <Container className="py-5">
-        {(wishlistError || contextWishlistError) && (
-          <Alert variant="danger" dismissible onClose={() => { setWishlistError(null); clearError(); }}>
-            {wishlistError || contextWishlistError}
-          </Alert>
-        )}
-
-        <div className="mb-4">
-          <h1 className="text-center mb-3">
-            {getCategoryDisplayName(category)} Products
-          </h1>
-          <p className="text-center text-muted">
-            Discover our premium {getCategoryDisplayName(category).toLowerCase()} collection
-          </p>
-        </div>
-
-        {products.length > 0 && (
-          <div className="mb-4">
-            <Row className="align-items-center">
-              <Col md={6}>
-                <p className="mb-0">
-                  Showing {products.length} product{products.length !== 1 ? 's' : ''}
-                </p>
-              </Col>
-              <Col md={6} className="text-md-end">
-                <div className="d-flex gap-2 justify-content-md-end">
-                  <span className="text-muted">Sort by:</span>
-                  <Button
-                    variant={sortBy === 'name' ? 'primary' : 'outline-primary'}
-                    size="sm"
-                    onClick={() => handleSort('name')}
-                  >
-                    Name {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
-                  </Button>
-                  <Button
-                    variant={sortBy === 'price' ? 'primary' : 'outline-primary'}
-                    size="sm"
-                    onClick={() => handleSort('price')}
-                  >
-                    Price {sortBy === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}
-                  </Button>
-                  <Button
-                    variant={sortBy === 'rating' ? 'primary' : 'outline-primary'}
-                    size="sm"
-                    onClick={() => handleSort('rating')}
-                  >
-                    Rating {sortBy === 'rating' && (sortOrder === 'asc' ? '↑' : '↓')}
-                  </Button>
-                </div>
-              </Col>
-            </Row>
-          </div>
-        )}
-
-        {sortedProducts.length === 0 ? (
-          <div className="text-center py-5">
-            <h3 className="text-muted">No products found</h3>
-            <p className="text-muted">
-              No products available in the {getCategoryDisplayName(category).toLowerCase()} category.
+      <div className="category-page">
+        {/* Header Section */}
+        <section className="category-header fade-in-up">
+          <Container>
+            <nav aria-label="breadcrumb" className="breadcrumb-nav">
+              <ol className="breadcrumb justify-content-center">
+                <li className="breadcrumb-item">
+                  <Link to="/">
+                    <FontAwesomeIcon icon={faHome} className="me-2" />
+                    Home
+                  </Link>
+                </li>
+                <li className="breadcrumb-item">
+                  <Link to="/products">Products</Link>
+                </li>
+                <li className="breadcrumb-item active">{getCategoryDisplayName(category)}</li>
+              </ol>
+            </nav>
+            
+            <h1 className="category-title">
+              <FontAwesomeIcon icon={faShoppingBag} className="me-3" />
+              {getCategoryDisplayName(category)} Collection
+            </h1>
+            <p className="category-subtitle">
+              Discover our premium selection of {getCategoryDisplayName(category).toLowerCase()} products. 
+              Carefully curated for quality and excellence.
             </p>
-            <Link to="/" className="btn btn-primary">
-              Browse All Products
-            </Link>
-          </div>
-        ) : (
-          <Row>
-            {sortedProducts.map((product) => (
-              <Col key={product.id} lg={4} md={6} className="mb-4">
-                <Card className="h-100 product-card">
-                  <div className="product-image-container">
-                    <Card.Img
-                      variant="top"
-                      src={product.images?.[0] || '/placeholder-product.jpg'}
-                      alt={product.name}
-                      className="product-image"
-                    />
-                    <div className="product-overlay">
-                      <Button
-                        variant="outline-light"
-                        size="sm"
-                        className="overlay-btn"
-                        onClick={() => handleWishlistToggle(product)}
-                        disabled={togglingWishlist[product.id]}
-                      >
-                        {togglingWishlist[product.id] ? (
-                          <Spinner animation="border" size="sm" />
-                        ) : (
-                          <FontAwesomeIcon
-                            icon={isInWishlist(product.id) ? faHeart : farHeart}
-                            className={isInWishlist(product.id) ? 'text-danger' : ''}
-                          />
-                        )}
-                      </Button>
-                      <Button
-                        variant="outline-light"
-                        size="sm"
-                        className="overlay-btn"
-                        onClick={() => handleAddToCart(product)}
-                        disabled={product.stock === 0}
-                      >
-                        <FontAwesomeIcon icon={faShoppingCart} />
-                      </Button>
-                    </div>
-                    {product.stock < 10 && product.stock > 0 && (
-                      <Badge bg="warning" className="position-absolute top-0 end-0 m-2">
-                        Low Stock
-                      </Badge>
-                    )}
-                    {product.stock === 0 && (
-                      <Badge bg="danger" className="position-absolute top-0 end-0 m-2">
-                        Out of Stock
-                      </Badge>
-                    )}
+          </Container>
+        </section>
+
+        {/* Main Content */}
+        <Container>
+          {/* Controls Bar */}
+          {products.length > 0 && (
+            <div className="category-controls fade-in-up">
+              <div className="controls-content">
+                <div className="results-info">
+                  Found {products.length} product{products.length !== 1 ? 's' : ''} in {getCategoryDisplayName(category)}
+                </div>
+                <div className="sort-controls">
+                  <span className="sort-label">Sort by:</span>
+                  <div className="sort-buttons">
+                    <Button
+                      className={`sort-btn ${sortBy === 'name' ? 'active' : ''}`}
+                      onClick={() => handleSort('name')}
+                    >
+                      Name {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    </Button>
+                    <Button
+                      className={`sort-btn ${sortBy === 'price' ? 'active' : ''}`}
+                      onClick={() => handleSort('price')}
+                    >
+                      Price {sortBy === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    </Button>
+                    <Button
+                      className={`sort-btn ${sortBy === 'rating' ? 'active' : ''}`}
+                      onClick={() => handleSort('rating')}
+                    >
+                      Rating {sortBy === 'rating' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    </Button>
                   </div>
-                  <Card.Body className="d-flex flex-column">
-                    <div className="mb-2">
-                      <Badge bg="secondary" className="mb-2">
-                        {product.category}
-                      </Badge>
-                    </div>
-                    <Card.Title className="product-title">
-                      <Link to={`/product/${product.id}`} className="text-decoration-none">
-                        {product.name}
-                      </Link>
-                    </Card.Title>
-                    <div className="mb-2">
-                      <div className="d-flex align-items-center">
-                        {[...Array(5)].map((_, i) => (
-                          <FontAwesomeIcon
-                            key={i}
-                            icon={faStar}
-                            className={i < Math.floor(product.rating || 0) ? 'text-warning' : 'text-muted'}
-                            size="sm"
-                          />
-                        ))}
-                        <span className="ms-2 text-muted small">
-                          ({product.rating || 0})
-                        </span>
-                      </div>
-                    </div>
-                    <div className="mb-3">
-                      <span className="h5 text-primary mb-0">₹{product.price}</span>
-                      {product.gst && (
-                        <span className="text-muted small ms-2">+ {product.gst}% GST</span>
-                      )}
-                    </div>
-                    <Card.Text className="flex-grow-1">
-                      {product.description?.substring(0, 100)}
-                      {product.description?.length > 100 && '...'}
-                    </Card.Text>
-                    <div className="mt-auto">
-                      <div className="d-grid gap-2">
-                        <Button
-                          variant="primary"
-                          onClick={() => handleAddToCart(product)}
-                          disabled={product.stock === 0}
-                        >
-                          <FontAwesomeIcon icon={faShoppingCart} className="me-2" />
-                          Add to Cart
-                        </Button>
-                        <Button
-                          variant={isInWishlist(product.id) ? 'danger' : 'outline-danger'}
-                          onClick={() => handleWishlistToggle(product)}
-                          disabled={togglingWishlist[product.id]}
-                        >
-                          <FontAwesomeIcon
-                            icon={isInWishlist(product.id) ? faHeart : farHeart}
-                            className="me-2"
-                          />
-                          {isInWishlist(product.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
-                        </Button>
-                      </div>
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-            ))}
-          </Row>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Error Alerts */}
+          {(wishlistError || contextWishlistError) && (
+            <Alert variant="danger" dismissible onClose={() => { setWishlistError(null); clearError(); }} className="fade-in-up">
+              {wishlistError || contextWishlistError}
+            </Alert>
+          )}
+
+          {/* Success Notification */}
+          {showSuccess && (
+            <div className="success-notification">
+              {successMessage}
+            </div>
+          )}
+
+          {/* Products Grid */}
+          <section className="products-grid-section">
+            {sortedProducts.length === 0 ? (
+              <div className="empty-state fade-in-up">
+                <FontAwesomeIcon icon={faBoxOpen} className="empty-state-icon" />
+                <h3 className="empty-state-title">
+                  No {getCategoryDisplayName(category).toLowerCase()} products found
+                </h3>
+                <p className="empty-state-text">
+                  We couldn't find any products in the {getCategoryDisplayName(category).toLowerCase()} category. 
+                  Check back soon for new arrivals or browse our other categories.
+                </p>
+                <div className="d-flex gap-3 justify-content-center flex-wrap">
+                  <Link to="/products" className="btn btn-success btn-lg">
+                    Browse All Products
+                  </Link>
+                  <Link to="/categories" className="btn btn-outline-success btn-lg">
+                    View Categories
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <Row className="products-grid">
+                {sortedProducts.map((product, index) => (
+                  <Col 
+                    key={product.id}
+                    className="stagger-item"
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    <ProductCard
+                      product={product}
+                      onAddToCart={handleAddToCart}
+                      onWishlistToggle={handleWishlistToggle}
+                      isInWishlist={isInWishlist(product.id)}
+                    />
+                  </Col>
+                ))}
+              </Row>
+            )}
+          </section>
+        </Container>
+
+        {/* Scroll to Top Button */}
+        {showScrollTop && (
+          <div className="quick-actions">
+            <Button className="scroll-to-top" onClick={scrollToTop}>
+              <FontAwesomeIcon icon={faArrowUp} />
+            </Button>
+          </div>
         )}
-      </Container>
+      </div>
     </UserLayout>
   );
 };

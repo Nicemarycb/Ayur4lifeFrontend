@@ -212,8 +212,8 @@ const AdminProfile = () => {
                     </Button>
                   </div>
                 ) : (
-                  <Button variant="primary" onClick={() => setIsEditing(true)} className="admin-btn admin-btn-edit">
-                    <FontAwesomeIcon icon={faEdit} className="me-2" />
+                  <Button variant="warning" onClick={() => setIsEditing(true)} className="admin-btn admin-btn-edit">
+                    <FontAwesomeIcon icon={faEdit} className="me-2 " />
                     Edit Profile
                   </Button>
                 )}
@@ -235,19 +235,19 @@ const AdminProfile = () => {
                 You are logged in as an <strong>Administrator</strong> with full access to manage the store.
               </p>
               <div className="d-grid gap-2">
-                <Button href="/admin" variant="primary" className="admin-quick-action-btn text-start">
+                <Button href="/admin" variant="secondary" className="admin-quick-action-btn text-warning">
                   <FontAwesomeIcon icon={faChartBar} className="me-2" />
                   Go to Dashboard
                 </Button>
-                <Button href="/admin/products" variant="outline-primary" className="admin-quick-action-btn text-start">
+                <Button href="/admin/products" variant="secondary" className="admin-quick-action-btn text-warning">
                   <FontAwesomeIcon icon={faBox} className="me-2" />
                   Manage Products
                 </Button>
-                <Button href="/admin/orders" variant="outline-primary" className="admin-quick-action-btn text-start">
+                <Button href="/admin/orders" variant="secondary" className="admin-quick-action-btn text-warning">
                   <FontAwesomeIcon icon={faCog} className="me-2" />
                   View Orders
                 </Button>
-                <Button href="/admin/users" variant="outline-primary" className="admin-quick-action-btn text-start">
+                <Button href="/admin/users" variant="secondary" className="admin-quick-action-btn text-warning">
                   <FontAwesomeIcon icon={faUsers} className="me-2" />
                   Manage Users
                 </Button>

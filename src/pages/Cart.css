@@ -1,0 +1,71 @@
+/* src/pages/Cart.css */
+
+/* Position the cart item card to allow for absolute positioning of child elements */
+.cart-item {
+  position: relative;
+  overflow: hidden; /* Ensures the overlay doesn't spill out */
+}
+
+/* Container for quantity controls to manage positioning */
+.quantity-controls-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 5px; /* Adds space between buttons and input field */
+}
+
+/* Overlay for the loading state */
+.updating-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.7); /* Semi-transparent white */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  pointer-events: none; /* Allows clicks to pass through */
+  backdrop-filter: blur(2px); /* Optional: Adds a subtle blur effect */
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Spinner icon styling */
+.updating-spinner {
+  font-size: 2rem;
+  color: #198754; /* Match your primary green color */
+  animation: spin 1.5s linear infinite;
+}
+
+/* Keyframe for the spin animation */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Keyframe for a smooth fade-in effect */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Style for the quantity input field */
+.quantity-controls-container .form-control {
+  text-align: center;
+  font-weight: 600;
+}
+
+/* Disable hover and active effects on buttons when updating */
+.quantity-controls-container .btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}

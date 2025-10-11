@@ -68,7 +68,7 @@ const Footer = () => {
                  </Link>
                </li>
                <li className="mb-2">
-                 <Link to="/products">
+                 <Link to="/all-products">
                    <FontAwesomeIcon icon={faArrowRight} className="me-2" size="sm" />
                    All Products
                  </Link>
@@ -82,7 +82,7 @@ const Footer = () => {
                <li className="mb-2">
                  <Link to="/contact">
                    <FontAwesomeIcon icon={faArrowRight} className="me-2" size="sm" />
-                   Contact
+                   Contact Us
                  </Link>
                </li>
                <li className="mb-2">
@@ -145,7 +145,9 @@ const Footer = () => {
                </div>
                <div className="d-flex align-items-center mb-2">
                  <FontAwesomeIcon icon={faEnvelope} className="me-2" />
-                 <span>ayur4life@gmail.com</span>
+                 <a href="mailto:ayur4life@gmail.com" className="text-decoration-none">
+                   <span>ayur4life@gmail.com</span>
+                 </a>
                </div>
                <div className="d-flex align-items-center mb-3">
                  <FontAwesomeIcon icon={faClock} className="me-2" />
@@ -202,8 +204,8 @@ const Footer = () => {
            </Col>
            <Col md={6} className="text-md-end">
              <div className="legal-links">
-               <Link to="/privacy">Privacy Policy</Link>
-               <Link to="/terms">Terms of Service</Link>
+               <Link to="/privacy-policy">Privacy Policy</Link>
+               <Link to="/terms-of-service">Terms of Service</Link>
                {/* <Link to="/shipping">Shipping Info</Link> */}
                <Link to="/return-policy">Return Policy</Link>
              </div>

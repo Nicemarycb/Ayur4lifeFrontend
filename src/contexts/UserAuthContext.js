@@ -68,6 +68,43 @@ const register = async (userData) => {
     return { success: false, error: message };
   }
 };
+//forgot password, reset password
+const forgotPassword = async (email) => {
+  try {
+    setError(null);
+    const response = await axios.post('/api/auth/forgot-password', { email });
+    return { success: true, message: 'Password reset email sent successfully' };
+  } catch (err) {
+    const message = err.response?.data?.error || 'Failed to send reset email';
+    setError(message);
+    return { success: false, error: message };
+  }
+};
+// In UserAuthContext.js - update the resetUserPassword method
+const resetUserPassword = async (email, newPassword) => {
+  try {
+    setError(null);
+    console.log('Sending reset request for:', email);
+    
+    const response = await axios.post('/api/auth/reset-user-password', {
+      email: email.toLowerCase().trim(),
+      newPassword
+    });
+    
+    console.log('Reset response:', response.data);
+    return { success: true, message: response.data.message };
+  } catch (err) {
+    console.error('Reset password error:', err.response?.data);
+    const message = err.response?.data?.error || 'Failed to reset password';
+    setError(message);
+    return { 
+      success: false, 
+      error: message,
+      details: err.response?.data?.details 
+    };
+  }
+};
+
 
   // Add register, updateProfile, changePassword as needed...
 
@@ -103,9 +140,11 @@ const changePassword = async (passwordData) => {
       error,
       login,
       logout,
-     register,
-     updateProfile,
-     changePassword,
+      register,
+      updateProfile,
+      changePassword,
+      forgotPassword,
+      resetUserPassword,
       isAuthenticated: !!user,
     clearError, 
     }}>

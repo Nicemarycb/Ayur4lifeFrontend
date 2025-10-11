@@ -31,7 +31,7 @@ const About = () => {
             <Col lg={6} className="text-center">
               <div className="about-hero-image">
                 <img 
-                  src="/images/ayurvedic-wellness-1.jfif" 
+                  src="/images/4a84ab4b2a257f7f320a89c6109aa12a.jpg"
                   alt="Ayurvedic Wellness" 
                   className="hero-main-image"
                 />
@@ -176,7 +176,7 @@ const About = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="stats-section py-5 bg-success text-white">
+      {/* <section className="stats-section py-5 bg-success text-white">
         <Container>
           <Row className="text-center">
             <Col lg={3} md={6} className="mb-4">
@@ -205,7 +205,7 @@ const About = () => {
             </Col>
           </Row>
         </Container>
-      </section>
+      </section> */}
 
       {/* Team Section */}
       <section className="team-section py-5 bg-light">

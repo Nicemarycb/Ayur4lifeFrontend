@@ -142,6 +142,11 @@ const Login = () => {
                       </Link>
                     </p>
                   </div>
+<div className="forgot-password-link text-center mt-3">
+  <Link to="/reset-password" className="text-decoration-none">
+    Forgot your password? Reset it here
+  </Link>
+</div>
                 </Form>
               </Card.Body>
             </Card>
@@ -150,9 +155,9 @@ const Login = () => {
             <div className="text-center mt-4">
               <p className="text-muted small">
                 By logging in, you agree to our{' '}
-                <Link to="/terms" className="text-decoration-none">Terms of Service</Link>
+                <Link to="/terms-of-service" className="text-decoration-none">Terms of Service</Link>
                 {' '}and{' '}
-                <Link to="/privacy" className="text-decoration-none">Privacy Policy</Link>
+                <Link to="/privacy-policy" className="text-decoration-none">Privacy Policy</Link>
               </p>
             </div>
           </Col>

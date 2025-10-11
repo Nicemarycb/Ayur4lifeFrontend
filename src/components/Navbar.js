@@ -263,154 +263,151 @@ const NavigationBar = () => {
   };
 
   return (
-    <Navbar bg="success" variant="dark" expand="lg" fixed="top" className="py-3 shadow-sm">
-      <Container>
-        {/* Brand */}
-        <Navbar.Brand as={Link} to="/" className="fw-bold fs-3 d-flex align-items-center">
-          <img
-            src={logo1}
-            alt="Ayur4Life Logo"
-            style={{
-              height: "70px",
-              width: "70px",
-              marginRight: "10px",
-            }}
-          />
-          <span>
-            <span className="text-warning">Ayur</span>4Life
-          </span>
-        </Navbar.Brand>
+   <Navbar variant="dark" expand="lg" fixed="top" className="py-3 shadow-sm" style={{ backgroundColor: '#255a33ff' }}>
+  <Container fluid>
+    {/* Left Section: Logo + Links */}
+    <div className="d-flex align-items-center">
+      {/* Logo */}
+      <Navbar.Brand as={Link} to="/" className="fw-bold fs-3 d-flex align-items-center me-4">
+        <img
+          src={logo1}
+          alt="Ayur4Life Logo"
+          style={{ height: "70px", width: "70px", marginRight: "10px" }}
+        />
+        <span>
+          <span className="text-warning">Ayur</span>4Life
+        </span>
+      </Navbar.Brand>
 
-        <Navbar.Toggle aria-controls="basic-navbar-nav" />
-        <Navbar.Collapse id="basic-navbar-nav">
-          {/* Navigation Links */}
-          <Nav className="me-auto">
-            <Nav.Link as={Link} to="/" className="fw-semibold">
-              Home
-            </Nav.Link>
-            
-            <Nav.Link as={Link} to="/about" className="fw-semibold">
-              About
-            </Nav.Link>
-            
-            {/* Categories Dropdown */}
-            <Dropdown as={Nav.Item}>
-              <Dropdown.Toggle as={Nav.Link} className="fw-semibold">
-                Categories
-              </Dropdown.Toggle>
-              <Dropdown.Menu>
-                {loading ? (
-                  <Dropdown.Item disabled>Loading...</Dropdown.Item>
-                ) : error ? (
-                  <Dropdown.Item disabled>Error: {error}</Dropdown.Item>
-                ) : categories.length === 0 ? (
-                  <Dropdown.Item disabled>No categories available</Dropdown.Item>
-                ) : (
-                  categories.map((category) => (
-                    <Dropdown.Item 
-                      key={category.id} 
-                      as={Link} 
-                      to={`/category/${category.id}`}
-                    >
-                      {category.name || category.id}
-                    </Dropdown.Item>
-                  ))
-                )}
-              </Dropdown.Menu>
-            </Dropdown>
+      {/* Nav Links */}
+      <Nav className="d-flex align-items-center">
+        <Nav.Link as={Link} to="/" className="fw-semibold">
+          Home
+        </Nav.Link>
+        <Nav.Link as={Link} to="/about" className="fw-semibold">
+          About
+        </Nav.Link>
+         <Nav.Link as={Link} to="/contact" className="fw-semibold">
+        Contact
+          </Nav.Link>
+            <Nav.Link as={Link} to="/all-products" className="fw-semibold">
+        All Products
+          </Nav.Link>
 
-            {/* {isAuthenticated && (
-              <>
-                <Nav.Link as={Link} to="/wishlist" className="fw-semibold">
-                  Wishlist
-                </Nav.Link>
-                <Nav.Link as={Link} to="/cart" className="fw-semibold">
-                  Cart
-                </Nav.Link>
-              </>
-            )} */}
-          </Nav>
-
-          {/* Search Form */}
-          <Form className="d-flex me-3" onSubmit={handleSearch}>
-            <Form.Control
-              type="search"
-              placeholder="Search products..."
-              className="me-2"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ minWidth: '250px' }}
-            />
-            <Button variant="outline-light" type="submit">
-              <FontAwesomeIcon icon={faSearch} />
-            </Button>
-          </Form>
-
-          {/* Right Side Navigation */}
-          <Nav>
-            {isAuthenticated ? (
-              <>
-                {/* Cart Icon */}
-                <Nav.Link as={Link} to="/cart" className="position-relative me-3">
-                  <FontAwesomeIcon icon={faShoppingCart} size="lg" />
-                  {cartItemCount > 0 && (
-                    <Badge 
-                      bg="danger" 
-                      className="position-absolute top-0 start-100 translate-middle"
-                      style={{ fontSize: '0.7rem' }}
-                    >
-                      {cartItemCount}
-                    </Badge>
-                  )}
-                </Nav.Link>
-
-                {/* Wishlist Icon */}
-                <Nav.Link as={Link} to="/wishlist" className="position-relative me-3">
-                  <FontAwesomeIcon icon={faHeart} size="lg" />
-                  {wishlistCount > 0 && (
-                    <Badge 
-                      bg="danger" 
-                      className="position-absolute top-0 start-100 translate-middle"
-                      style={{ fontSize: '0.7rem' }}
-                    >
-                      {wishlistCount}
-                    </Badge>
-                  )}
-                </Nav.Link>
-
-                {/* User Dropdown */}
-                <Dropdown as={Nav.Item}>
-                  <Dropdown.Toggle as={Nav.Link} className="fw-semibold">
-                    <FontAwesomeIcon icon={faUser} className="me-1" />
-                    {user?.firstName || 'Account'}
-                  </Dropdown.Toggle>
-                  <Dropdown.Menu>
-                    <Dropdown.Item as={Link} to="/account">
-                      <FontAwesomeIcon icon={faCog} className="me-2" />
-                      My Account
-                    </Dropdown.Item>
-                    <Dropdown.Divider />
-                    <Dropdown.Item onClick={handleLogout}>
-                      <FontAwesomeIcon icon={faSignOutAlt} className="me-2" />
-                      Logout
-                    </Dropdown.Item>
-                  </Dropdown.Menu>
-                </Dropdown>
-              </>
+        {/* Categories Dropdown */}
+        <Dropdown as={Nav.Item}>
+          <Dropdown.Toggle as={Nav.Link} className="fw-semibold">
+          Categories
+          </Dropdown.Toggle>
+          <Dropdown.Menu>
+            {loading ? (
+              <Dropdown.Item disabled>Loading...</Dropdown.Item>
+            ) : error ? (
+              <Dropdown.Item disabled>Error: {error}</Dropdown.Item>
+            ) : categories.length === 0 ? (
+              <Dropdown.Item disabled>No categories available</Dropdown.Item>
             ) : (
-              <>
-                <Nav.Link as={Link} to="/login" className="fw-semibold me-2">
-                  Login
-                </Nav.Link>
-                <Nav.Link as={Link} to="/register" className="fw-semibold">
-                  Register
-                </Nav.Link>
-              </>
+              categories.map((category) => (
+                <Dropdown.Item 
+                  key={category.id} 
+                  as={Link} 
+                  to={`/category/${category.id}`}
+                >
+                  {category.name || category.id}
+                </Dropdown.Item>
+              ))
             )}
-          </Nav>
-        </Navbar.Collapse>
-      </Container>
-    </Navbar>
+          </Dropdown.Menu>
+        </Dropdown>
+      </Nav>
+    </div>
+
+    <Navbar.Toggle aria-controls="basic-navbar-nav" />
+    <Navbar.Collapse id="basic-navbar-nav">
+      {/* Right Section: Search + Icons */}
+      <div className="d-flex align-items-center ms-auto">
+        {/* Search Form */}
+        <Form className="d-flex me-3" onSubmit={handleSearch}>
+          <Form.Control
+            type="search"
+            placeholder="Search products..."
+            className="me-2"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ minWidth: "250px" }}
+          />
+          <Button variant="outline-light" type="submit">
+            <FontAwesomeIcon icon={faSearch} />
+          </Button>
+        </Form>
+
+        {/* Right Side Icons */}
+        <Nav className="d-flex align-items-center">
+          {isAuthenticated ? (
+            <>
+              {/* Cart Icon */}
+              <Nav.Link as={Link} to="/cart" className="position-relative me-3">
+                <FontAwesomeIcon icon={faShoppingCart} size="lg" />
+                {cartItemCount > 0 && (
+                  <Badge 
+                    bg="danger" 
+                    className="position-absolute top-0 start-100 translate-middle"
+                    style={{ fontSize: "0.7rem" }}
+                  >
+                    {cartItemCount}
+                  </Badge>
+                )}
+              </Nav.Link>
+
+              {/* Wishlist Icon */}
+              <Nav.Link as={Link} to="/wishlist" className="position-relative me-3">
+                <FontAwesomeIcon icon={faHeart} size="lg" />
+                {wishlistCount > 0 && (
+                  <Badge 
+                    bg="danger" 
+                    className="position-absolute top-0 start-100 translate-middle"
+                    style={{ fontSize: "0.7rem" }}
+                  >
+                    {wishlistCount}
+                  </Badge>
+                )}
+              </Nav.Link>
+
+              {/* User Dropdown */}
+              <Dropdown as={Nav.Item}>
+                <Dropdown.Toggle as={Nav.Link} className="fw-semibold">
+                  <FontAwesomeIcon icon={faUser} className="me-1" />
+                  {user?.firstName || "Account"}
+                </Dropdown.Toggle>
+                <Dropdown.Menu>
+                  <Dropdown.Item as={Link} to="/account">
+                    <FontAwesomeIcon icon={faCog} className="me-2" />
+                    My Account
+                  </Dropdown.Item>
+                  <Dropdown.Divider />
+                  <Dropdown.Item onClick={handleLogout}>
+                    <FontAwesomeIcon icon={faSignOutAlt} className="me-2" />
+                    Logout
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
+            </>
+          ) : (
+            <>
+              <Nav.Link as={Link} to="/login" className="fw-semibold me-2">
+                Login
+              </Nav.Link>
+              <Nav.Link as={Link} to="/register" className="fw-semibold">
+                Register
+              </Nav.Link>
+            </>
+          )}
+        </Nav>
+      </div>
+    </Navbar.Collapse>
+  </Container>
+</Navbar>
+
   );
 };
 

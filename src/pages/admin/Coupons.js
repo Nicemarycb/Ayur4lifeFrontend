@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge, Table,Modal } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge, Table, Modal } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faTrash, faToggleOn, faToggleOff } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faTrash, faToggleOn, faToggleOff, faEdit } from '@fortawesome/free-solid-svg-icons';
 import AdminLayout from '../../layouts/AdminLayout';
 import { useAdminAuth } from '../../contexts/AdminAuthContext';
 import axios from 'axios';
@@ -13,6 +13,7 @@ const Coupons = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [editingCoupon, setEditingCoupon] = useState(null);
   const [formData, setFormData] = useState({
     code: '',
     discountType: 'percentage',
@@ -52,19 +53,39 @@ const Coupons = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      setError(null);
-      
+  e.preventDefault();
+  try {
+    setError(null);
+    
+    if (editingCoupon) {
+      // Update existing coupon - CHANGE THIS LINE
+      await axios.put(`/api/coupons/update/${editingCoupon.id}`, formData, getAuthConfig());
+      setSuccess('Coupon updated successfully');
+    } else {
+      // Create new coupon
       await axios.post('/api/coupons', formData, getAuthConfig());
       setSuccess('Coupon created successfully');
-      
-      fetchCoupons();
-      handleCloseModal();
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to create coupon');
     }
+    
+    fetchCoupons();
+    handleCloseModal();
+    setTimeout(() => setSuccess(null), 3000);
+  } catch (err) {
+    setError(err.response?.data?.error || `Failed to ${editingCoupon ? 'update' : 'create'} coupon`);
+  }
+};
+
+  const handleEdit = (coupon) => {
+    setEditingCoupon(coupon);
+    setFormData({
+      code: coupon.code,
+      discountType: coupon.discountType,
+      discountValue: coupon.discountValue,
+      minOrderAmount: coupon.minOrderAmount || '',
+      validTo: coupon.validTo ? coupon.validTo.split('T')[0] : '',
+      description: coupon.description || ''
+    });
+    setShowModal(true);
   };
 
   const handleDelete = async (couponId) => {
@@ -93,6 +114,7 @@ const Coupons = () => {
 
   const handleCloseModal = () => {
     setShowModal(false);
+    setEditingCoupon(null);
     setFormData({
       code: '',
       discountType: 'percentage',
@@ -245,6 +267,14 @@ const Coupons = () => {
                       <td>{getStatusBadge(coupon)}</td>
                       <td>
                         <Button
+                          variant="outline-primary"
+                          size="sm"
+                          className="me-2"
+                          onClick={() => handleEdit(coupon)}
+                        >
+                          <FontAwesomeIcon icon={faEdit} />
+                        </Button>
+                        <Button
                           variant={coupon.isActive ? "outline-warning" : "outline-success"}
                           size="sm"
                           className="me-2"
@@ -268,10 +298,10 @@ const Coupons = () => {
           </Card.Body>
         </Card>
 
-        {/* Add Coupon Modal */}
+        {/* Add/Edit Coupon Modal */}
         <Modal show={showModal} onHide={handleCloseModal}>
           <Modal.Header closeButton>
-            <Modal.Title>Add New Coupon</Modal.Title>
+            <Modal.Title>{editingCoupon ? 'Edit Coupon' : 'Add New Coupon'}</Modal.Title>
           </Modal.Header>
           <Form onSubmit={handleSubmit}>
             <Modal.Body>
@@ -286,7 +316,13 @@ const Coupons = () => {
                       onChange={handleInputChange}
                       placeholder="SAVE20"
                       required
+                      disabled={editingCoupon} // Disable editing of code when updating
                     />
+                    {editingCoupon && (
+                      <Form.Text className="text-muted">
+                        Coupon code cannot be changed after creation
+                      </Form.Text>
+                    )}
                   </Form.Group>
                 </Col>
                 <Col md={6}>
@@ -372,7 +408,7 @@ const Coupons = () => {
                 Cancel
               </Button>
               <Button type="submit" variant="primary">
-                Create Coupon
+                {editingCoupon ? 'Update Coupon' : 'Create Coupon'}
               </Button>
             </Modal.Footer>
           </Form>

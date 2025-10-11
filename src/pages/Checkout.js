@@ -433,8 +433,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCreditCard, faLock, faShieldAlt, faTruck } from '@fortawesome/free-solid-svg-icons';
+import { faCreditCard, faLock, faShieldAlt, faTruck,faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useCart } from '../contexts/CartContext';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import UserLayout from '../layouts/UserLayout';
 import { useUserAuth } from '../contexts/UserAuthContext';
@@ -519,12 +520,21 @@ const Checkout = () => {
     setAppliedCoupon(null);
   };
 
-  useEffect(() => {
-    // Navigate to cart page if the cart is empty
-    if (cart.length === 0 && !orderPlaced) {
-      navigate('/cart');
-    }
-  }, [cart, orderPlaced, navigate]);
+useEffect(() => {
+  // Load applied coupon from localStorage
+  const savedCoupon = localStorage.getItem('selectedCoupon');
+  if (savedCoupon) {
+    const couponData = JSON.parse(savedCoupon);
+    setAppliedCoupon(couponData);
+    // Clear the stored coupon after loading
+    localStorage.removeItem('selectedCoupon');
+  }
+  
+  // Navigate to cart page if the cart is empty
+  if (cart.length === 0 && !orderPlaced) {
+    navigate('/cart');
+  }
+}, [cart, orderPlaced, navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -845,107 +855,140 @@ const Checkout = () => {
           </Col>
 
           <Col lg={4}>
-            {/* Order Summary */}
-            <Card className="sticky-top" style={{ top: '20px' }}>
-              <Card.Header>
-                <h5 className="mb-0">Order Summary</h5>
-              </Card.Header>
-              <Card.Body>
-                {/* Coupon Input */}
-                <CouponInput
-                  onCouponApplied={handleCouponApplied}
-                  onCouponRemoved={handleCouponRemoved}
-                  appliedCoupon={appliedCoupon}
-                  orderAmount={subtotal}
-                />
-                
-                <hr />
-                {cart.map((item) => (
-                  <div key={item.id} className="d-flex justify-content-between align-items-center mb-2">
-                    <div>
-                      <strong>{item.product.name}</strong>
-                      <br />
-                      <small className="text-muted">
-                        Qty: {item.quantity} × ₹{item.product.price}
-                      </small>
-                    </div>
-                    <strong>₹{(item.product.price * item.quantity).toFixed(2)}</strong>
-                  </div>
-                ))}
-                
-                <hr />
-                
-                <div className="d-flex justify-content-between mb-2">
-                  <span>Subtotal ({totalItems} items):</span>
-                  <span>₹{finalTotals.originalSubtotal.toFixed(2)}</span>
-                </div>
-                {appliedCoupon && (
-                  <div className="d-flex justify-content-between mb-2 text-success">
-                    <span>Discount ({appliedCoupon.coupon.code}):</span>
-                    <span>-₹{finalTotals.discountAmount.toFixed(2)}</span>
-                  </div>
-                )}
-                {finalTotals.sgst > 0 && (
-                  <div className="d-flex justify-content-between mb-2">
-                    <span>SGST:</span>
-                    <span>₹{finalTotals.sgst.toFixed(2)}</span>
-                  </div>
-                )}
-                {finalTotals.cgst > 0 && (
-                  <div className="d-flex justify-content-between mb-2">
-                    <span>CGST:</span>
-                    <span>₹{finalTotals.cgst.toFixed(2)}</span>
-                  </div>
-                )}
-                {finalTotals.gst > 0 && (
-                  <div className="d-flex justify-content-between mb-2">
-                    <span>Total GST:</span>
-                    <span>₹{finalTotals.gst.toFixed(2)}</span>
-                  </div>
-                )}
-                {finalTotals.deliveryCharge > 0 && (
-                  <div className="d-flex justify-content-between mb-2">
-                    <span>Delivery:</span>
-                    <span>₹{finalTotals.deliveryCharge.toFixed(2)}</span>
-                  </div>
-                )}
-                <hr />
-                <div className="d-flex justify-content-between mb-3">
-                  <strong>Total:</strong>
-                  <strong className="text-primary">
-                    ₹{finalTotals.total.toFixed(2)}
-                  </strong>
-                </div>
-                
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="lg"
-                  className="w-100"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <Spinner animation="border" size="sm" className="me-2" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <FontAwesomeIcon icon={faLock} className="me-2" />
-                      Place Order
-                    </>
-                  )}
-                </Button>
-                
-                <div className="text-center mt-3">
-                  <small className="text-muted">
-                    <FontAwesomeIcon icon={faShieldAlt} className="me-1" />
-                    Secure checkout powered by Ayur4Life
-                  </small>
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
+  {/* Order Summary */}
+  <Card className="sticky-top" style={{ top: '20px' }}>
+    <Card.Header>
+      <h5 className="mb-0">Order Summary</h5>
+    </Card.Header>
+    <Card.Body>
+      <div className="d-flex justify-content-between align-items-center mb-2">
+  <small className="text-muted">Apply coupon to save more</small>
+  <Button 
+    as={Link} 
+    to="/coupons" 
+    variant="outline-success" 
+    size="sm"
+    state={{ fromCheckout: true }}
+  >
+    Browse All Coupons
+  </Button>
+</div>
+      
+      {/* Coupon Input */}
+      <CouponInput
+        onCouponApplied={handleCouponApplied}
+        onCouponRemoved={handleCouponRemoved}
+        appliedCoupon={appliedCoupon}
+        orderAmount={subtotal}
+      />
+      
+      <hr />
+      {cart.map((item) => (
+        <div key={item.id} className="d-flex justify-content-between align-items-center mb-2">
+          <div>
+            <strong>{item.product.name}</strong>
+            <br />
+            <small className="text-muted">
+              Qty: {item.quantity} × ₹{item.product.price}
+            </small>
+          </div>
+          <strong>₹{(item.product.price * item.quantity).toFixed(2)}</strong>
+        </div>
+      ))}
+      
+      <hr />
+      
+      <div className="d-flex justify-content-between mb-2">
+        <span>Subtotal ({totalItems} items):</span>
+        <span>₹{finalTotals.originalSubtotal.toFixed(2)}</span>
+      </div>
+
+
+      {/* APPLIED COUPON SECTION WITH REMOVE BUTTON */}
+      {appliedCoupon && (
+        <div className="d-flex justify-content-between align-items-center mb-2 p-2 bg-success bg-opacity-10 rounded">
+          <div>
+            <span className="text-success">
+              <strong>Discount ({appliedCoupon.coupon.code}):</strong>
+            </span>
+            <br />
+            <small className="text-muted">
+              -₹{finalTotals.discountAmount.toFixed(2)} saved
+            </small>
+          </div>
+          <Button 
+            variant="outline-danger" 
+            size="sm" 
+            onClick={handleCouponRemoved}
+            title="Remove coupon"
+            className="ms-2"
+          >
+            <FontAwesomeIcon icon={faTimes} />
+          </Button>
+        </div>
+      )}
+      
+      {finalTotals.sgst > 0 && (
+        <div className="d-flex justify-content-between mb-2">
+          <span>SGST:</span>
+          <span>₹{finalTotals.sgst.toFixed(2)}</span>
+        </div>
+      )}
+      {finalTotals.cgst > 0 && (
+        <div className="d-flex justify-content-between mb-2">
+          <span>CGST:</span>
+          <span>₹{finalTotals.cgst.toFixed(2)}</span>
+        </div>
+      )}
+      {finalTotals.gst > 0 && (
+        <div className="d-flex justify-content-between mb-2">
+          <span>Total GST:</span>
+          <span>₹{finalTotals.gst.toFixed(2)}</span>
+        </div>
+      )}
+      {finalTotals.deliveryCharge > 0 && (
+        <div className="d-flex justify-content-between mb-2">
+          <span>Delivery:</span>
+          <span>₹{finalTotals.deliveryCharge.toFixed(2)}</span>
+        </div>
+      )}
+      <hr />
+      <div className="d-flex justify-content-between mb-3">
+        <strong>Total:</strong>
+        <strong className="text-primary">
+          ₹{finalTotals.total.toFixed(2)}
+        </strong>
+      </div>
+      
+      <Button
+        type="submit"
+        variant="primary"
+        size="lg"
+        className="w-100"
+        disabled={loading}
+      >
+        {loading ? (
+          <>
+            <Spinner animation="border" size="sm" className="me-2" />
+            Processing...
+          </>
+        ) : (
+          <>
+            <FontAwesomeIcon icon={faLock} className="me-2" />
+            Place Order
+          </>
+        )}
+      </Button>
+      
+      <div className="text-center mt-3">
+        <small className="text-muted">
+          <FontAwesomeIcon icon={faShieldAlt} className="me-1" />
+          Secure checkout powered by Ayur4Life
+        </small>
+      </div>
+    </Card.Body>
+  </Card>
+</Col>
         </Row>
       </Form>
     </Container>

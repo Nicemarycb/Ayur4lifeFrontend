@@ -112,7 +112,7 @@ const ReviewForm = ({ productId, onSubmit, onCancel, existingReview = null }) =>
           <Col xs="auto">
             <Button
               type="submit"
-              variant="primary"
+              variant="success "
               disabled={loading}
               className="px-4"
             >

@@ -15,12 +15,6 @@
   position: relative;
 }
 
-.product-image {
-  height: 200px;
-  object-fit: cover;
-  transition: transform 0.5s ease;
-}
-
 .product-card:hover .product-image {
   transform: scale(1.05);
 }

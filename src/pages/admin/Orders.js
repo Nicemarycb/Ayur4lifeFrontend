@@ -525,21 +525,47 @@ const AdminOrders = () => {
     }));
   };
 
-  const handleStatusUpdate = async (orderId, newStatus) => {
-    try {
-      setUpdatingStatus(true);
-      await axios.patch(`/api/admin/orders/${orderId}/status`, { status: newStatus }, getAuthConfig());
-      fetchOrders();
-      if (selectedOrder && selectedOrder.id === orderId) {
-        setSelectedOrder(prev => ({ ...prev, status: newStatus }));
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update order status');
-    } finally {
-      setUpdatingStatus(false);
-    }
-  };
+  // const handleStatusUpdate = async (orderId, newStatus) => {
+  //   try {
+  //     setUpdatingStatus(true);
+  //     await axios.patch(`/api/admin/orders/${orderId}/status`, { status: newStatus }, getAuthConfig());
+  //     fetchOrders();
+  //     if (selectedOrder && selectedOrder.id === orderId) {
+  //       setSelectedOrder(prev => ({ ...prev, status: newStatus }));
+  //     }
+  //   } catch (err) {
+  //     setError(err.response?.data?.message || 'Failed to update order status');
+  //   } finally {
+  //     setUpdatingStatus(false);
+  //   }
+  // };
 
+  const handleStatusUpdate = async (orderId, newStatus) => {
+  try {
+    setUpdatingStatus(true);
+    
+    // Call the updated API endpoint that sends emails
+    await axios.patch(
+      `/api/admin/orders/${orderId}/status`, 
+      { status: newStatus }, 
+      getAuthConfig()
+    );
+    
+    // Refresh orders list
+    fetchOrders();
+    
+    // Update selected order if it's open
+    if (selectedOrder && selectedOrder.id === orderId) {
+      setSelectedOrder(prev => ({ ...prev, status: newStatus }));
+    }
+    
+  } catch (err) {
+    setError(err.response?.data?.message || 'Failed to update order status');
+  } finally {
+    setUpdatingStatus(false);
+  }
+};
+  
   const handleViewOrder = async (orderId) => {
     try {
       const response = await axios.get(`/api/admin/orders/${orderId}`, getAuthConfig());

@@ -741,6 +741,90 @@ const Account = () => {
     }
   };
 
+  // Add these helper functions to your Account.js component
+
+// Format price with proper currency
+const formatPrice = (price) => {
+  if (price === undefined || price === null || price === '' || isNaN(price)) {
+    return '₹0';
+  }
+  
+  const numPrice = typeof price === 'string' ? 
+    parseFloat(price.replace(/[^0-9.-]+/g, "")) : 
+    Number(price);
+  
+  if (isNaN(numPrice) || numPrice <= 0) {
+    return '₹0';
+  }
+  
+  return `₹${numPrice.toLocaleString('en-IN', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2
+  })}`;
+};
+
+// Extract item total price
+const extractItemTotal = (item) => {
+  if (!item) return 0;
+  
+  // Prefer itemTotal, fallback to unitPrice * quantity
+  if (item.itemTotal) {
+    return extractPrice(item.itemTotal);
+  }
+  if (item.unitPrice && item.quantity) {
+    return extractPrice(item.unitPrice) * item.quantity;
+  }
+  return 0;
+};
+
+// Extract price from any format
+const extractPrice = (priceData) => {
+  if (priceData === undefined || priceData === null) return 0;
+  
+  if (typeof priceData === 'number') {
+    return priceData;
+  }
+  
+  if (typeof priceData === 'string') {
+    const cleaned = priceData.replace(/[₹,]/g, '').trim();
+    const parsed = parseFloat(cleaned);
+    return isNaN(parsed) ? 0 : parsed;
+  }
+  
+  return 0;
+};
+
+// Format date properly
+const formatDate = (dateInput) => {
+  if (!dateInput) return 'N/A';
+  
+  try {
+    let date;
+    
+    if (dateInput && typeof dateInput === 'object' && dateInput.toDate && typeof dateInput.toDate === 'function') {
+      date = dateInput.toDate();
+    } 
+    else if (dateInput) {
+      date = new Date(dateInput);
+    } else {
+      return 'N/A';
+    }
+    
+    if (isNaN(date.getTime())) {
+      return 'N/A';
+    }
+    
+    return date.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'N/A';
+  }
+};
+
   // Get return status for a specific product in an order
   const getReturnStatus = (orderId, productId) => {
     const returnRequest = returnRequests.find(req => 
@@ -1017,6 +1101,7 @@ const handlePasswordSave = async () => {
               <Nav.Link
                 active={activeTab === 'profile'}
                 onClick={() => setActiveTab('profile')}
+                className={activeTab === 'profile' ? "bg-secondary text-white" : ""}
               >
                 <FontAwesomeIcon icon={faUser} className="me-2"  />
                 Profile
@@ -1026,6 +1111,7 @@ const handlePasswordSave = async () => {
               <Nav.Link
                 active={activeTab === 'orders'}
                 onClick={() => setActiveTab('orders')}
+                className={activeTab === 'orders' ? "bg-secondary text-white" : ""}
               >
                 <FontAwesomeIcon icon={faShoppingBag} className="me-2" />
                 Orders
@@ -1035,6 +1121,7 @@ const handlePasswordSave = async () => {
               <Nav.Link
                 active={activeTab === 'returns'}
                 onClick={() => setActiveTab('returns')}
+                className={activeTab === 'returns' ? "bg-secondary text-white" : ""}
               >
                 <FontAwesomeIcon icon={faUndo} className="me-2" />
                 Return Requests
@@ -1044,6 +1131,7 @@ const handlePasswordSave = async () => {
               <Nav.Link
                 active={activeTab === 'cancellations'}
                 onClick={() => setActiveTab('cancellations')}
+                className={activeTab === 'cancellations' ? "bg-secondary text-white" : ""}
               >
                 <FontAwesomeIcon icon={faTimes} className="me-2" />
                 Order Cancellations
@@ -1053,6 +1141,7 @@ const handlePasswordSave = async () => {
               <Nav.Link
                 active={activeTab === 'security'}
                 onClick={() => setActiveTab('security')}
+                className={activeTab === 'security' ? "bg-secondary text-white" : ""}
               >
                 <FontAwesomeIcon icon={faCog} className="me-2" />
                 Security
@@ -1449,25 +1538,7 @@ const handlePasswordSave = async () => {
                                             </Button>
                                           )}
                                           
-                                          {/* Cancel Button - Only show if not delivered and no cancellation request */}
-                                          {order.status !== 'delivered' && order.status !== 'cancelled' && !cancellationStatus && !returnStatus && (
-                                            <Button
-                                              variant="outline-danger"
-                                              size="sm"
-                                              onClick={() => {
-                                                console.log('Cancel button clicked:', {
-                                                  orderId: order.id,
-                                                  productIdentifier,
-                                                  item: item
-                                                });
-                                                navigate(`/cancel-order/${order.id}/${productIdentifier}`);
-                                              }}
-                                              className="btn-sm"
-                                            >
-                                              <FontAwesomeIcon icon={faTimes} className="me-1" />
-                                              Cancel
-                                            </Button>
-                                          )}
+                                         
                                           
                                           {/* Status Display */}
                                           {returnStatus && (
@@ -1539,14 +1610,33 @@ const handlePasswordSave = async () => {
                               </div>
                               
                               {/* Invoice Button */}
-                              <div className="mt-3 text-center">
-                                <InvoiceButton 
-                                  orderId={order.id} 
-                                  orderNumber={order.orderNumber || order.id}
-                                  variant="outline-success"
-                                  size="sm"
-                                />
-                              </div>
+                             {/* Action Buttons */}
+<div className="mt-3 text-center">
+  <div className="d-flex justify-content-center gap-2">
+    {/* Invoice Button */}
+    <InvoiceButton 
+      orderId={order.id} 
+      orderNumber={order.orderNumber || order.id}
+      variant="outline-success"
+      size="sm"
+    />
+    
+    {/* Single Cancel Button for entire order - Only show if not delivered/cancelled */}
+    {order.status !== 'delivered' && order.status !== 'cancelled' && (
+      <Button
+        variant="outline-danger"
+        size="sm"
+        onClick={() => {
+          navigate(`/cancel-order/${order.id}`);
+        }}
+        className="btn-sm"
+      >
+        <FontAwesomeIcon icon={faTimes} className="me-1" />
+        Cancel Order
+      </Button>
+    )}
+  </div>
+</div>
                             </Card.Body>
                           </Card>
                         ))}
@@ -1674,121 +1764,158 @@ const handlePasswordSave = async () => {
               </Tab.Pane>
 
               {/* Cancellations Tab */}
-              <Tab.Pane eventKey="cancellations">
-                <Card>
-                  <Card.Header className="d-flex justify-content-between align-items-center">
-                    <h5 className="mb-0">
-                      <FontAwesomeIcon icon={faTimes} className="me-2" />
-                      Order Cancellations
-                    </h5>
-                    <Button 
-                      variant="primary" 
-                      size="sm" 
-                      onClick={fetchCancellations}
-                      disabled={cancellationsLoading}
-                    >
-                      <FontAwesomeIcon icon={faSearch} className="me-2" />
-                      Refresh
-                    </Button>
-                  </Card.Header>
-                  <Card.Body>
-                    {cancellationsLoading ? (
-                      <div className="text-center py-4">
-                        <Spinner animation="border" role="status" className="text-primary">
-                          <span className="visually-hidden">Loading...</span>
-                        </Spinner>
-                        <p className="mt-3">Loading cancellation requests...</p>
-                      </div>
-                    ) : cancellations.length === 0 ? (
-                      <div className="text-center py-4">
-                        <h5>No Cancellation Requests</h5>
-                        <p className="text-muted">
-                          You haven't submitted any cancellation requests yet.
-                        </p>
-                        <p className="text-muted">
-                          You can only cancel orders before they are delivered.
-                        </p>
-                      </div>
-                    ) : (
-                      <div>
-                        {cancellations.map((cancellation) => (
-                          <Card key={cancellation.id} className="mb-3">
-                            <Card.Header className="d-flex justify-content-between align-items-center">
+              {/* Cancellations Tab */}
+<Tab.Pane eventKey="cancellations">
+  <Card>
+    <Card.Header className="d-flex justify-content-between align-items-center">
+      <h5 className="mb-0">
+        <FontAwesomeIcon icon={faTimes} className="me-2" />
+        Order Cancellations
+      </h5>
+      <Button 
+        variant="primary" 
+        size="sm" 
+        onClick={fetchCancellations}
+        disabled={cancellationsLoading}
+      >
+        <FontAwesomeIcon icon={faSearch} className="me-2" />
+        Refresh
+      </Button>
+    </Card.Header>
+    <Card.Body>
+      {cancellationsLoading ? (
+        <div className="text-center py-4">
+          <Spinner animation="border" role="status" className="text-primary">
+            <span className="visually-hidden">Loading...</span>
+          </Spinner>
+          <p className="mt-3">Loading cancellation requests...</p>
+        </div>
+      ) : cancellations.length === 0 ? (
+        <div className="text-center py-4">
+          <h5>No Cancellation Requests</h5>
+          <p className="text-muted">
+            You haven't submitted any cancellation requests yet.
+          </p>
+          <p className="text-muted">
+            You can only cancel orders before they are delivered.
+          </p>
+        </div>
+      ) : (
+        <div>
+          {cancellations.map((cancellation) => (
+            <Card key={cancellation.id} className="mb-3">
+              <Card.Header className="d-flex justify-content-between align-items-center">
+                <div>
+                  <strong>Cancellation Request #{cancellation.id?.slice(-8) || 'N/A'}</strong>
+                  <br />
+                  <small className="text-muted">
+                    {new Date(cancellation.createdAt?.toDate?.() || cancellation.createdAt).toLocaleDateString()}
+                  </small>
+                </div>
+                <div className="text-end">
+                  {getCancellationStatusBadge(cancellation.status)}
+                </div>
+              </Card.Header>
+              <Card.Body>
+                <div className="row">
+                  <div className="col-md-8">
+                    {/* Order Information */}
+                    <div className="mb-3">
+                      <h6>Order Information</h6>
+                      <p className="mb-1"><strong>Order Number:</strong> {cancellation.orderNumber || 'N/A'}</p>
+                      <p className="mb-1"><strong>Order Date:</strong> {formatDate(cancellation.orderDate)}</p>
+                      <p className="mb-1"><strong>Order Status:</strong> <span className="text-capitalize">{cancellation.orderStatus || 'N/A'}</span></p>
+                      <p className="mb-1"><strong>Delivery Status:</strong> <span className="text-capitalize">{cancellation.deliveryStatus || 'N/A'}</span></p>
+                    </div>
+
+                    {/* Order Summary */}
+                    <div className="mb-3">
+                      <h6>Order Summary</h6>
+                      <p className="mb-1"><strong>Total Items:</strong> {cancellation.totalItems || cancellation.items?.length || 0}</p>
+                      <p className="mb-1"><strong>Subtotal:</strong> {formatPrice(cancellation.subtotal)}</p>
+                      {cancellation.gstAmount > 0 && (
+                        <p className="mb-1"><strong>GST:</strong> {formatPrice(cancellation.gstAmount)}</p>
+                      )}
+                      {cancellation.deliveryCharge > 0 && (
+                        <p className="mb-1"><strong>Delivery Charge:</strong> {formatPrice(cancellation.deliveryCharge)}</p>
+                      )}
+                      {cancellation.discountAmount > 0 && (
+                        <p className="mb-1"><strong>Discount:</strong> -{formatPrice(cancellation.discountAmount)}</p>
+                      )}
+                      <p className="mb-1"><strong>Final Amount:</strong> {formatPrice(cancellation.finalAmount)}</p>
+                    </div>
+
+                    {/* Items List */}
+                    {cancellation.items && cancellation.items.length > 0 && (
+                      <div className="mb-3">
+                        <h6>Items in Order</h6>
+                        {cancellation.items.map((item, index) => (
+                          <div key={index} className="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+                            <div className="d-flex align-items-center">
+                              {item.productImage && (
+                                <img 
+                                  src={item.productImage} 
+                                  alt={item.productName}
+                                  style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }}
+                                  className="me-2"
+                                  onError={(e) => {
+                                    e.target.src = '/Ayur4life_logo_round_png-01.png';
+                                  }}
+                                />
+                              )}
                               <div>
-                                <strong>Cancellation Request #{cancellation.id.slice(-8)}</strong>
+                                <div className="fw-semibold">{item.productName || 'Product'}</div>
+                                <small className="text-muted">Qty: {item.quantity || 1}</small>
                                 <br />
-                                <small className="text-muted">
-                                  {new Date(cancellation.createdAt?.toDate?.() || cancellation.createdAt).toLocaleDateString()}
-                                </small>
+                                <small className="text-muted">Price: {formatPrice(item.unitPrice)}</small>
                               </div>
-                              <div className="text-end">
-                                {getCancellationStatusBadge(cancellation.status)}
-                              </div>
-                            </Card.Header>
-                            <Card.Body>
-                              <div className="row">
-                                <div className="col-md-4">
-                                  <img 
-                                    src={cancellation.productImage || '/Ayur4life_logo_round_png-01.png'} 
-                                    alt={cancellation.productName}
-                                    className="img-fluid rounded"
-                                    style={{ maxHeight: '100px' }}
-                                  />
-                                </div>
-                                <div className="col-md-8">
-                                  <h6>{cancellation.productName}</h6>
-                                  <p className="text-muted mb-1">Order: #{cancellation.orderNumber}</p>
-                                  <p className="text-muted mb-1">Quantity: {cancellation.quantity}</p>
-                                  <p className="text-muted mb-2">Price: ₹{cancellation.productPrice}</p>
-                                  
-                                  <div className="mb-2">
-                                    <strong>Cancellation Reason:</strong>
-                                    <p className="mb-1">{cancellation.cancelReason}</p>
-                                  </div>
-                                  
-                                  {cancellation.description && (
-                                    <div className="mb-2">
-                                      <strong>Description:</strong>
-                                      <p className="mb-1">{cancellation.description}</p>
-                                    </div>
-                                  )}
-                                  
-                                  <div className="mb-2">
-                                    <strong>Order Status:</strong>
-                                    <span className="ms-2 text-capitalize">{cancellation.orderStatus}</span>
-                                  </div>
-                                  
-                                  <div className="mb-2">
-                                    <strong>Delivery Status:</strong>
-                                    <span className="ms-2 text-capitalize">{cancellation.deliveryStatus}</span>
-                                  </div>
-                                  
-                                  {cancellation.adminAction && (
-                                    <div className="mb-2">
-                                      <strong>Admin Action:</strong>
-                                      <p className="mb-1 text-info">
-                                        {cancellation.adminAction.charAt(0).toUpperCase() + cancellation.adminAction.slice(1)}
-                                        {cancellation.adminReason && ` - ${cancellation.adminReason}`}
-                                      </p>
-                                    </div>
-                                  )}
-                                  
-                                  {cancellation.updatedAt && (
-                                    <small className="text-muted">
-                                      Last updated: {new Date(cancellation.updatedAt?.toDate?.() || cancellation.updatedAt).toLocaleDateString()}
-                                    </small>
-                                  )}
-                                </div>
-                              </div>
-                            </Card.Body>
-                          </Card>
+                            </div>
+                            <div className="text-end">
+                              <strong>{formatPrice(extractItemTotal(item))}</strong>
+                            </div>
+                          </div>
                         ))}
                       </div>
                     )}
-                  </Card.Body>
-                </Card>
-              </Tab.Pane>
 
+                    {/* Cancellation Details */}
+                    <div className="mb-2">
+                      <strong>Cancellation Reason:</strong>
+                      <p className="mb-1">{cancellation.cancelReason || 'N/A'}</p>
+                    </div>
+                    
+                    {cancellation.description && (
+                      <div className="mb-2">
+                        <strong>Description:</strong>
+                        <p className="mb-1">{cancellation.description}</p>
+                      </div>
+                    )}
+                    
+                    {cancellation.adminAction && (
+                      <div className="mb-2">
+                        <strong>Admin Action:</strong>
+                        <p className="mb-1 text-info">
+                          {cancellation.adminAction.charAt(0).toUpperCase() + cancellation.adminAction.slice(1)}
+                          {cancellation.adminReason && ` - ${cancellation.adminReason}`}
+                        </p>
+                      </div>
+                    )}
+                    
+                    {cancellation.updatedAt && (
+                      <small className="text-muted">
+                        Last updated: {new Date(cancellation.updatedAt?.toDate?.() || cancellation.updatedAt).toLocaleDateString()}
+                      </small>
+                    )}
+                  </div>
+                </div>
+              </Card.Body>
+            </Card>
+          ))}
+        </div>
+      )}
+    </Card.Body>
+  </Card>
+</Tab.Pane>
               {/* Security Tab */}
               <Tab.Pane eventKey="security">
                 <Card>

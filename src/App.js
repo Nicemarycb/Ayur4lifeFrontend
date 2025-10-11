@@ -36,6 +36,13 @@ import ReturnPolicy from './pages/ReturnPolicy';
 import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
 import About from './pages/About';
+import TermsOfService from './pages/TermsOfService';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import Contact from './pages/Contacts';
+import CouponPage from './pages/CouponPage';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+
 
 function App() {
   return (
@@ -55,6 +62,11 @@ function App() {
                   <Route path="/product/:id" element={<ProductDetail />} />
                   <Route path="/category/:category" element={<CategoryProducts />} />
                   <Route path="/about" element={<About />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                  <Route path="/terms-of-service" element={<TermsOfService />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />     
                   
                   {/* Protected Routes */}
                   <Route path="/cart" element={
@@ -67,6 +79,11 @@ function App() {
                       <Wishlist />
                     </PrivateRoute>
                   } />
+                  <Route path="/coupons" element={
+  <PrivateRoute>
+    <CouponPage />
+  </PrivateRoute>
+} />
                   <Route path="/checkout" element={
                     <PrivateRoute>
                       <Checkout />
@@ -82,7 +99,7 @@ function App() {
                       <ReturnRequest />
                     </PrivateRoute>
                   } />
-                  <Route path="/cancel-order/:orderId/:productId" element={
+                  <Route path="/cancel-order/:orderId" element={
                     <PrivateRoute>
                       <CancelOrder />
                     </PrivateRoute>

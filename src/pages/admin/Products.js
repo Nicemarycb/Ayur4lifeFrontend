@@ -11,6 +11,7 @@ import {
   Badge,
   Modal,
   Table,
+  InputGroup,
 } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -22,6 +23,8 @@ import {
   faBoxes,
   faImage,
   faVideo,
+  faSearch,
+  faFilter,
 } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
 import { useAdminAuth } from "../../contexts/AdminAuthContext";
@@ -30,6 +33,7 @@ import { formatQuantityUnit } from "../../utils/quantityFormatter";
 
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -40,6 +44,12 @@ const AdminProducts = () => {
   const [video, setVideo] = useState(null);
   const [imageManagementProduct, setImageManagementProduct] = useState(null);
   const [showImageModal, setShowImageModal] = useState(false);
+
+  // Search and filter states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [stockFilter, setStockFilter] = useState("all");
+  const [categories, setCategories] = useState([]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -74,9 +84,23 @@ const AdminProducts = () => {
     { value: "drop", label: "Drop" },
   ];
 
+  // Stock filter options
+  const stockOptions = [
+    { value: "all", label: "All Stock" },
+    { value: "inStock", label: "In Stock" },
+    { value: "lowStock", label: "Low Stock (< 10)" },
+    { value: "outOfStock", label: "Out of Stock" },
+  ];
+
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
+
+  // Apply filters whenever products, search term, category filter, or stock filter changes
+  useEffect(() => {
+    applyFilters();
+  }, [products, searchTerm, categoryFilter, stockFilter]);
 
   const fetchProducts = async () => {
     try {
@@ -95,6 +119,70 @@ const AdminProducts = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get("/api/products/categories/all");
+      setCategories(response.data.categories || []);
+    } catch (err) {
+      console.error("Failed to fetch categories:", err);
+    }
+  };
+
+  const applyFilters = () => {
+    let filtered = [...products];
+
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter(product =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Apply category filter
+    if (categoryFilter) {
+      filtered = filtered.filter(product =>
+        product.category === categoryFilter
+      );
+    }
+
+    // Apply stock filter
+    switch (stockFilter) {
+      case "inStock":
+        filtered = filtered.filter(product => product.stock > 0);
+        break;
+      case "lowStock":
+        filtered = filtered.filter(product => product.stock > 0 && product.stock < 10);
+        break;
+      case "outOfStock":
+        filtered = filtered.filter(product => product.stock === 0);
+        break;
+      default:
+        // "all" - no filter applied
+        break;
+    }
+
+    setFilteredProducts(filtered);
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleCategoryFilterChange = (e) => {
+    setCategoryFilter(e.target.value);
+  };
+
+  const handleStockFilterChange = (e) => {
+    setStockFilter(e.target.value);
+  };
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setCategoryFilter("");
+    setStockFilter("all");
   };
 
   // NEW: Function to fetch a single product (used to refresh modal after updates)
@@ -129,14 +217,13 @@ const AdminProducts = () => {
     }
   };
 
-const handleImageChange = (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    setImages((prev) => Array.isArray(prev) ? [...prev, file] : [file]); // append instead of overwrite
-  }
-  e.target.value = ""; // reset so user can select again
-};
-
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImages((prev) => Array.isArray(prev) ? [...prev, file] : [file]); // append instead of overwrite
+    }
+    e.target.value = ""; // reset so user can select again
+  };
 
   const handleVideoChange = (e) => {
     setVideo(e.target.files[0]);
@@ -241,28 +328,28 @@ const handleImageChange = (e) => {
     }
   };
 
-const handleEdit = (product) => {
-  setEditingProduct(product);
-  setFormData({
-    name: product.name || "",
-    description: product.description || "",
-    price: product.price || "",
-    category: product.category || "",
-    stock: product.stock || "",
-    sgst: product.sgst || "",
-    cgst: product.cgst || "",
-    features: product.features || [],
-    quantityUnit: product.quantityUnit || "piece",
-    deliveryCharge: product.deliveryCharge || "",
-    freeDeliveryThreshold: product.freeDeliveryThreshold || "",
-  });
+  const handleEdit = (product) => {
+    setEditingProduct(product);
+    setFormData({
+      name: product.name || "",
+      description: product.description || "",
+      price: product.price || "",
+      category: product.category || "",
+      stock: product.stock || "",
+      sgst: product.sgst || "",
+      cgst: product.cgst || "",
+      features: product.features || [],
+      quantityUnit: product.quantityUnit || "piece",
+      deliveryCharge: product.deliveryCharge || "",
+      freeDeliveryThreshold: product.freeDeliveryThreshold || "",
+    });
 
-  // Preload media
-  setImages(Array.isArray(product.images) ? product.images : []);
-  setVideo(product.video || null);
+    // Preload media
+    setImages(Array.isArray(product.images) ? product.images : []);
+    setVideo(product.video || null);
 
-  setShowModal(true);
-};
+    setShowModal(true);
+  };
 
   const handleDelete = async () => {
     try {
@@ -439,200 +526,287 @@ const handleEdit = (product) => {
     );
   }
 
-return (
-  <AdminLayout>
-    <Container className="py-5">
-      <div className="mb-4">
-        <Row className="align-items-center">
-          <Col>
-            <h1 className="mb-2">Manage Products</h1>
-            <p className="text-muted mb-0">
-              Total Products: {products?.length || 0}
-            </p>
-          </Col>
-          <Col xs="auto">
-            <Button variant="primary" onClick={openAddModal}>
-              <FontAwesomeIcon icon={faPlus} className="me-2" />
-              Add New Product
-            </Button>
-          </Col>
-        </Row>
-      </div>
-
-      {error && (
-        <Alert
-          variant="danger"
-          className="mb-4"
-          dismissible
-          onClose={() => setError(null)}
-        >
-          {error}
-        </Alert>
-      )}
-
-      <Card>
-        <Card.Body>
-          {products.length === 0 ? (
-            <div className="text-center py-5">
-              <FontAwesomeIcon
-                icon={faBoxes}
-                size="4x"
-                className="text-muted mb-3"
-              />
-              <h4>No products yet</h4>
-              <p className="text-muted">Start by adding your first product.</p>
+  return (
+    <AdminLayout>
+      <Container className="py-5">
+        <div className="mb-4">
+          <Row className="align-items-center">
+            <Col>
+              <h1 className="mb-2">Manage Products</h1>
+              <p className="text-muted mb-0">
+                Total Products: {products?.length || 0}
+                {filteredProducts.length !== products.length && (
+                  <span className="text-info">
+                    {" "}(Filtered: {filteredProducts.length})
+                  </span>
+                )}
+              </p>
+            </Col>
+            <Col xs="auto">
               <Button variant="primary" onClick={openAddModal}>
                 <FontAwesomeIcon icon={faPlus} className="me-2" />
-                Add Product
+                Add New Product
               </Button>
-            </div>
-          ) : (
-            <div className="table-responsive">
-              <Table hover>
-                <thead>
-                  <tr>
-                    <th>Image</th>
-                    <th>Name</th>
-                    <th>Category</th>
-                    <th>Price</th>
-                    <th>Stock</th>
-                    <th>Unit</th>
-                    <th>Delivery</th>
-                    <th>Status</th>
-                    <th>Media</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Array.isArray(products) && products.map((product) => (
-                    <tr key={product.id}>
-                      <td>
-                        <img
-                          src={product.images?.[0] || "/Ayur4life_logo_round_png-01.png"}
-                          alt={product.name}
-                          style={{
-                            width: "50px",
-                            height: "50px",
-                            objectFit: "cover",
-                          }}
-                          className="rounded"
-                          onError={(e) => {
-                            e.target.src = "/Ayur4life_logo_round_png-01.png";
-                          }}
-                        />
-                        {product.images && product.images.length > 1 && (
-                          <Badge bg="info" className="ms-1">
-                            +{product.images.length - 1}
-                          </Badge>
-                        )}
-                      </td>
-                      <td>
-                        <strong>{product.name}</strong>
-                        <br />
-                        <small className="text-muted">
-                          {product.description?.substring(0, 30)}...
-                        </small>
-                      </td>
-                      <td>
-                        <Badge bg="secondary">{product.category}</Badge>
-                      </td>
-                      <td>
-                        <strong className="text-primary">₹{product.price}</strong>
-                      </td>
-                      <td>
-                        <span
-                          className={
-                            product.stock > 10
-                              ? "text-success"
-                              : product.stock > 0
-                              ? "text-warning"
-                              : "text-danger"
-                          }
-                        >
-                          {product.stock} {formatQuantityUnit(product.quantityUnit)}
-                        </span>
-                      </td>
-                      <td>
-                        <Badge bg="info">{formatQuantityUnit(product.quantityUnit)}</Badge>
-                      </td>
-                      <td>
-                        <div className="text-center">
-                          <div className="fw-bold">₹{product.deliveryCharge || 0}</div>
-                          {product.freeDeliveryThreshold > 0 && (
-                            <small className="text-muted">
-                              Free above ₹{product.freeDeliveryThreshold}
-                            </small>
-                          )}
-                        </div>
-                      </td>
-                      <td>
-                        {product.stock > 0 ? (
-                          <Badge bg="success">In Stock</Badge>
-                        ) : (
-                          <Badge bg="danger">Out of Stock</Badge>
-                        )}
-                      </td>
-                      <td>
-                        <div className="d-flex gap-1">
-                          {product.video && (
-                            <Badge bg="info">
-                              <FontAwesomeIcon icon={faVideo} className="me-1" />
-                              Video
+            </Col>
+          </Row>
+        </div>
+
+        {/* Search and Filter Section */}
+        <Card className="mb-4">
+          <Card.Header>
+            <h5 className="mb-0">
+              <FontAwesomeIcon icon={faFilter} className="me-2" />
+              Search & Filter Products
+            </h5>
+          </Card.Header>
+          <Card.Body>
+            <Row>
+              <Col md={4}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Search Products</Form.Label>
+                  <InputGroup>
+                    <InputGroup.Text>
+                      <FontAwesomeIcon icon={faSearch} />
+                    </InputGroup.Text>
+                    <Form.Control
+                      type="text"
+                      placeholder="Search by name or description..."
+                      value={searchTerm}
+                      onChange={handleSearchChange}
+                    />
+                  </InputGroup>
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Filter by Category</Form.Label>
+                  <Form.Select
+                    value={categoryFilter}
+                    onChange={handleCategoryFilterChange}
+                  >
+                    <option value="">All Categories</option>
+                    {Array.isArray(categories) && categories.map((category) => (
+                      <option key={category.id || category} value={category.name || category}>
+                        {category.name || category}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Filter by Stock</Form.Label>
+                  <Form.Select
+                    value={stockFilter}
+                    onChange={handleStockFilterChange}
+                  >
+                    {stockOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={2}>
+                <Form.Group className="mb-3">
+                  <Form.Label>&nbsp;</Form.Label>
+                  <div>
+                    <Button 
+                      variant="outline-secondary" 
+                      onClick={clearFilters}
+                      className="w-100"
+                    >
+                      Clear Filters
+                    </Button>
+                  </div>
+                </Form.Group>
+              </Col>
+            </Row>
+          </Card.Body>
+        </Card>
+
+        {error && (
+          <Alert
+            variant="danger"
+            className="mb-4"
+            dismissible
+            onClose={() => setError(null)}
+          >
+            {error}
+          </Alert>
+        )}
+
+        <Card>
+          <Card.Body>
+            {filteredProducts.length === 0 ? (
+              <div className="text-center py-5">
+                <FontAwesomeIcon
+                  icon={faBoxes}
+                  size="4x"
+                  className="text-muted mb-3"
+                />
+                <h4>No products found</h4>
+                <p className="text-muted">
+                  {products.length === 0 
+                    ? "Start by adding your first product." 
+                    : "Try adjusting your search or filters."}
+                </p>
+                {products.length === 0 && (
+                  <Button variant="primary" onClick={openAddModal}>
+                    <FontAwesomeIcon icon={faPlus} className="me-2" />
+                    Add Product
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="table-responsive">
+                <Table hover>
+                  <thead>
+                    <tr>
+                      <th>Image</th>
+                      <th>Name</th>
+                      <th>Category</th>
+                      <th>Price</th>
+                      <th>Stock</th>
+                      <th>Unit</th>
+                      <th>Delivery</th>
+                      <th>Status</th>
+                      <th>Media</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Array.isArray(filteredProducts) && filteredProducts.map((product) => (
+                      <tr key={product.id}>
+                        <td>
+                          <img
+                            src={product.images?.[0] || "/Ayur4life_logo_round_png-01.png"}
+                            alt={product.name}
+                            style={{
+                              width: "50px",
+                              height: "50px",
+                              objectFit: "cover",
+                            }}
+                            className="rounded"
+                            onError={(e) => {
+                              e.target.src = "/Ayur4life_logo_round_png-01.png";
+                            }}
+                          />
+                          {product.images && product.images.length > 1 && (
+                            <Badge bg="info" className="ms-1">
+                              +{product.images.length - 1}
                             </Badge>
                           )}
-                          <Button
-                            variant="outline-secondary"
-                            size="sm"
-                            onClick={() => openImageManagement(product)}
+                        </td>
+                        <td>
+                          <strong>{product.name}</strong>
+                          <br />
+                          <small className="text-muted">
+                            {product.description?.substring(0, 30)}...
+                          </small>
+                        </td>
+                        <td>
+                          <Badge bg="secondary">{product.category}</Badge>
+                        </td>
+                        <td>
+                          <strong className="text-primary">₹{product.price}</strong>
+                        </td>
+                        <td>
+                          <span
+                            className={
+                              product.stock > 10
+                                ? "text-success"
+                                : product.stock > 0
+                                ? "text-warning"
+                                : "text-danger"
+                            }
                           >
-                            <FontAwesomeIcon icon={faImage} />
-                          </Button>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="d-flex gap-1">
-                          <Button
-                            variant="outline-primary"
-                            size="sm"
-                            onClick={() => handleEdit(product)}
-                          >
-                            <FontAwesomeIcon icon={faEdit} />
-                          </Button>
-                          <Button
-                            variant="outline-danger"
-                            size="sm"
-                            onClick={() => {
-                              setDeletingProduct(product);
-                              setShowDeleteModal(true);
-                            }}
-                          >
-                            <FontAwesomeIcon icon={faTrash} />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </div>
-          )}
-        </Card.Body>
-      </Card>
+                            {product.stock} {formatQuantityUnit(product.quantityUnit)}
+                          </span>
+                        </td>
+                        <td>
+                          <Badge bg="info">{formatQuantityUnit(product.quantityUnit)}</Badge>
+                        </td>
+                        <td>
+                          <div className="text-center">
+                            <div className="fw-bold">₹{product.deliveryCharge || 0}</div>
+                            {product.freeDeliveryThreshold > 0 && (
+                              <small className="text-muted">
+                                Free above ₹{product.freeDeliveryThreshold}
+                              </small>
+                            )}
+                          </div>
+                        </td>
+                        <td>
+                          {product.stock > 0 ? (
+                            <Badge bg="success">In Stock</Badge>
+                          ) : (
+                            <Badge bg="danger">Out of Stock</Badge>
+                          )}
+                        </td>
+                        <td>
+                          <div className="d-flex gap-1">
+                            {product.video && (
+                              <Badge bg="info">
+                                <FontAwesomeIcon icon={faVideo} className="me-1" />
+                                Video
+                              </Badge>
+                            )}
+                            <Button
+                              variant="outline-secondary"
+                              size="sm"
+                              onClick={() => openImageManagement(product)}
+                            >
+                              <FontAwesomeIcon icon={faImage} />
+                            </Button>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="d-flex gap-1">
+                            <Button
+                              variant="outline-primary"
+                              size="sm"
+                              onClick={() => handleEdit(product)}
+                            >
+                              <FontAwesomeIcon icon={faEdit} />
+                            </Button>
+                            <Button
+                              variant="outline-danger"
+                              size="sm"
+                              onClick={() => {
+                                setDeletingProduct(product);
+                                setShowDeleteModal(true);
+                              }}
+                            >
+                              <FontAwesomeIcon icon={faTrash} />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              </div>
+            )}
+          </Card.Body>
+        </Card>
+
 
       {/* Add/Edit Product Modal */}
-      <Modal
-        show={showModal}
-        onHide={() => setShowModal(false)}
-        size="lg"
-        backdrop="static"
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>
-            {editingProduct ? "Edit Product" : "Add New Product"}
-          </Modal.Title>
-        </Modal.Header>
-        <Form onSubmit={handleSubmit}>
+       <Modal
+          show={showModal}
+          onHide={() => setShowModal(false)}
+          size="lg"
+          backdrop="static"
+          centered
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>
+              {editingProduct ? "Edit Product" : "Add New Product"}
+            </Modal.Title>
+          </Modal.Header>
+          <Form onSubmit={handleSubmit}>
           <Modal.Body>
             <Row>
               <Col md={6}>
@@ -905,26 +1079,26 @@ return (
               </Button>
             </Form.Group>
           </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowModal(false)}>
-              Cancel
-            </Button>
-            <Button variant="primary" type="submit" disabled={loading}>
-              {loading ? (
-                <>
-                  <Spinner animation="border" size="sm" className="me-2" />
-                  {editingProduct ? "Updating..." : "Adding..."}
-                </>
-              ) : (
-                <>
-                  <FontAwesomeIcon icon={faSave} className="me-2" />
-                  {editingProduct ? "Update Product" : "Add Product"}
-                </>
-              )}
-            </Button>
-          </Modal.Footer>
-        </Form>
-      </Modal>
+ <Modal.Footer>
+              <Button variant="secondary" onClick={() => setShowModal(false)}>
+                Cancel
+              </Button>
+              <Button variant="primary" type="submit" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Spinner animation="border" size="sm" className="me-2" />
+                    {editingProduct ? "Updating..." : "Adding..."}
+                  </>
+                ) : (
+                  <>
+                    <FontAwesomeIcon icon={faSave} className="me-2" />
+                    {editingProduct ? "Update Product" : "Add Product"}
+                  </>
+                )}
+              </Button>
+            </Modal.Footer>
+          </Form>
+        </Modal>
 
       {/* Media Management Modal (Images + Video) */}
       <Modal show={showImageModal} onHide={() => setShowImageModal(false)} size="lg">

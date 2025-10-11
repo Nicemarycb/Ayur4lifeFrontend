@@ -17,28 +17,118 @@ const ReturnRequests = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  // Utility function to format dates properly
-  const formatDate = (dateField) => {
-    if (!dateField) return 'N/A';
+  // // Utility function to format dates properly
+  // const formatDate = (dateField) => {
+  //   if (!dateField) return 'N/A';
     
-    try {
-      if (dateField.toDate && typeof dateField.toDate === 'function') {
-        // Firestore Timestamp
-        return dateField.toDate().toLocaleDateString();
-      } else if (dateField instanceof Date) {
-        // Date object
-        return dateField.toLocaleDateString();
-      } else if (typeof dateField === 'string' || typeof dateField === 'number') {
-        // String or timestamp
-        return new Date(dateField).toLocaleDateString();
-      } else {
-        return 'N/A';
-      }
-    } catch (error) {
-      console.error('Error formatting date:', error);
+  //   try {
+  //     if (dateField.toDate && typeof dateField.toDate === 'function') {
+  //       // Firestore Timestamp
+  //       return dateField.toDate().toLocaleDateString();
+  //     } else if (dateField instanceof Date) {
+  //       // Date object
+  //       return dateField.toLocaleDateString();
+  //     } else if (typeof dateField === 'string' || typeof dateField === 'number') {
+  //       // String or timestamp
+  //       return new Date(dateField).toLocaleDateString();
+  //     } else {
+  //       return 'N/A';
+  //     }
+  //   } catch (error) {
+  //     console.error('Error formatting date:', error);
+  //     return 'N/A';
+  //   }
+  // };
+
+  // Utility function to format dates properly
+const formatDate = (dateField) => {
+  if (!dateField) return 'N/A';
+  
+  try {
+    // Handle Firestore Timestamp objects
+    if (dateField && typeof dateField.toDate === 'function') {
+      return dateField.toDate().toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+    } 
+    // Handle string dates
+    else if (typeof dateField === 'string' || typeof dateField === 'number') {
+      const date = new Date(dateField);
+      return date.toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+    }
+    // Handle Date objects
+    else if (dateField instanceof Date) {
+      return dateField.toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+    }
+    return 'N/A';
+  } catch (error) {
+    console.error('Error formatting date:', error, dateField);
+    return 'N/A';
+  }
+};
+
+// Add this function to handle price display
+const getProductPrice = (request) => {
+  if (!request) return 'N/A';
+  
+  // Try all possible price fields
+  const priceFields = ['productPrice', 'price', 'unitPrice', 'itemPrice', 'salePrice', 'originalPrice'];
+  
+  for (const field of priceFields) {
+    const price = request[field];
+    if (price !== undefined && price !== null && price !== 0) {
+      return price;
+    }
+  }
+  
+  return 'N/A';
+};
+
+
+// Add this function to format timestamps as well
+const formatDateTime = (dateField) => {
+  if (!dateField) return 'N/A';
+  
+  try {
+    let date;
+    
+    // Handle Firestore Timestamp objects
+    if (dateField && typeof dateField.toDate === 'function') {
+      date = dateField.toDate();
+    } 
+    // Handle string dates
+    else if (typeof dateField === 'string' || typeof dateField === 'number') {
+      date = new Date(dateField);
+    }
+    // Handle Date objects
+    else if (dateField instanceof Date) {
+      date = dateField;
+    } else {
       return 'N/A';
     }
-  };
+    
+    return date.toLocaleString('en-IN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch (error) {
+    console.error('Error formatting date:', error, dateField);
+    return 'N/A';
+  }
+};
 
   useEffect(() => {
     if (isAuthenticated && isAdmin) {
@@ -234,7 +324,9 @@ const ReturnRequests = () => {
                         />
                         <div>
                           <div className="fw-semibold">{request.productName}</div>
-                          <small className="text-muted">Qty: {request.quantity}</small>
+                          <small className="text-muted">
+                          Qty: {request.quantity} | 
+ Price: {getProductPrice(request) === 'N/A' ? 'N/A' : `₹${getProductPrice(request)}`}                       </small>
                         </div>
                       </div>
                     </td>
@@ -244,7 +336,7 @@ const ReturnRequests = () => {
                       </div>
                     </td>
                                          <td>
-                       <small>{formatDate(request.createdAt)}</small>
+                         <small>{formatDateTime(request.createdAt)}</small>
                      </td>
                     <td>{getStatusBadge(request.status)}</td>
                     <td>
@@ -322,8 +414,7 @@ const ReturnRequests = () => {
                   <div>
                                          <div className="fw-semibold">{selectedRequest.productName || selectedRequest.name || 'N/A'}</div>
                      <div className="text-muted">Quantity: {selectedRequest.quantity || 'N/A'}</div>
-                     <div className="text-muted">Price: ₹{selectedRequest.productPrice || selectedRequest.price || 'N/A'}</div>
-                  </div>
+<div className="text-muted">Price: {getProductPrice(selectedRequest) === 'N/A' ? 'N/A' : `₹${getProductPrice(selectedRequest)}`}</div>                  </div>
                 </div>
               </Col>
               

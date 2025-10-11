@@ -1,10 +1,48 @@
+// Admin.js - Enhanced Admin Dashboard with Chart.js Integration
 import React, { useState, useEffect } from 'react';
 import { Row, Col, Card, Button, Alert, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUsers, faShoppingBag, faBoxes, faRupeeSign, faPlus, faEye } from '@fortawesome/free-solid-svg-icons';
-import { Link } from 'react-router-dom';
+import { 
+  faUsers, 
+  faShoppingBag, 
+  faBoxes, 
+  faRupeeSign, 
+  // faPlus, 
+  // faEye,
+  faChartLine,
+  faRefresh,
+  faArrowUp,
+  faArrowDown
+} from '@fortawesome/free-solid-svg-icons';
+// import { Link } from 'react-router-dom';
 import axios from 'axios';
 import AdminLayout from '../layouts/AdminLayout';
+import './Admin.css';
+import logo1 from '../assets/Ayur4life_logo_round_png-01.png';
+
+// Import Chart.js components
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const Admin = () => {
   const [stats, setStats] = useState(null);
@@ -32,10 +70,112 @@ const Admin = () => {
     }
   };
 
+  // Mock growth percentages for demo
+  const growthData = {
+    usersGrowth: 12.5,
+    ordersGrowth: 8.3,
+    revenueGrowth: 15.7,
+    productsGrowth: 5.2
+  };
+
+  // Chart data for revenue trend (mock data for design enhancement)
+  const chartData = {
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+    datasets: [
+      {
+        label: 'Monthly Revenue (₹)',
+        data: [12000, 19000, 15000, 22000, 18000, 25000, 21000, 28000, 30000],
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+        tension: 0.4,
+        fill: true,
+        pointBackgroundColor: '#3b82f6',
+        pointBorderColor: '#ffffff',
+        pointHoverBackgroundColor: '#1d4ed8',
+        pointHoverBorderColor: '#ffffff',
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          font: {
+            size: 14,
+            family: 'Inter',
+            weight: '600',
+          },
+          color: '#1a1d21',
+        },
+      },
+      title: {
+        display: true,
+        text: 'Revenue Trend Over Months',
+        font: {
+          size: 18,
+          family: 'Inter',
+          weight: '700',
+        },
+        color: '#1a1d21',
+        padding: {
+          top: 10,
+          bottom: 20,
+        },
+      },
+      tooltip: {
+        backgroundColor: '#1a1d21',
+        titleColor: '#ffffff',
+        bodyColor: '#ffffff',
+        borderColor: '#3b82f6',
+        borderWidth: 1,
+        callbacks: {
+          label: (context) => `₹${context.parsed.y.toLocaleString()}`,
+        },
+      },
+    },
+    scales: {
+      x: {
+        grid: {
+          display: false,
+        },
+        ticks: {
+          font: {
+            size: 12,
+            family: 'Inter',
+          },
+          color: '#6c757d',
+        },
+      },
+      y: {
+        grid: {
+          color: '#e5e7eb',
+        },
+        ticks: {
+          font: {
+            size: 12,
+            family: 'Inter',
+          },
+          color: '#6c757d',
+          callback: (value) => `₹${value.toLocaleString()}`,
+        },
+      },
+    },
+    elements: {
+      point: {
+        radius: 5,
+        hoverRadius: 8,
+      },
+    },
+  };
+
   if (loading) {
     return (
       <AdminLayout>
-        <div className="text-center">
+        <div className="dashboard-loading">
           <Spinner animation="border" role="status" className="text-primary">
             <span className="visually-hidden">Loading...</span>
           </Spinner>
@@ -48,7 +188,7 @@ const Admin = () => {
   if (error) {
     return (
       <AdminLayout>
-        <Alert variant="danger">
+        <Alert variant="danger" className="dashboard-alert">
           <Alert.Heading>Error</Alert.Heading>
           <p>{error}</p>
           <Button variant="outline-danger" onClick={fetchStats}>
@@ -61,148 +201,205 @@ const Admin = () => {
 
   return (
     <AdminLayout>
-      <div className="mb-4">
-        <h1 className="mb-2">Ayur4Life Admin Panel</h1>
-        <p className="text-muted">Welcome to the admin dashboard</p>
+      <div className="dashboard-header">
+        <div className="logo-container">
+          <img src={logo1} alt="Ayur4Life Logo" />
+        </div>
+        <div className="dashboard-title">
+          <h1 className='text-success'>Dashboard Overview Of Ayur4life Herbals</h1>
+          <p className="text-muted text-success">Welcome back! Here's what's happening with your store today.Explore More</p>
+        </div>
+        <Button onClick={fetchStats} className="refresh-btn">
+          <FontAwesomeIcon icon={faRefresh} className="me-2" />
+          Refresh
+        </Button>
       </div>
 
       {/* Statistics Cards */}
-      <Row className="mb-4">
-        <Col lg={3} md={6} className="mb-3">
-          <Card className="text-center h-100">
+      <Row className="stats-row">
+        <Col xl={3} lg={6} className="mb-4">
+          <Card className="stat-card users-card">
             <Card.Body>
-              <div className="mb-3">
-                <FontAwesomeIcon icon={faUsers} size="2x" className="text-primary" />
+              <div className="stat-icon">
+                <FontAwesomeIcon icon={faUsers} />
               </div>
-              <h3 className="text-primary">{stats?.totalUsers || 0}</h3>
-              <p className="text-muted mb-0">Total Users</p>
+              <div className="stat-content">
+                <h3>{stats?.totalUsers || 0}</h3>
+                <p>Total Users</p>
+                <div className={`growth-badge ${growthData.usersGrowth >= 0 ? 'positive' : 'negative'}`}>
+                  <FontAwesomeIcon icon={growthData.usersGrowth >= 0 ? faArrowUp : faArrowDown} className="me-1" />
+                  {Math.abs(growthData.usersGrowth)}%
+                </div>
+              </div>
             </Card.Body>
           </Card>
         </Col>
-        <Col lg={3} md={6} className="mb-3">
-          <Card className="text-center h-100">
+        <Col xl={3} lg={6} className="mb-4">
+          <Card className="stat-card orders-card">
             <Card.Body>
-              <div className="mb-3">
-                <FontAwesomeIcon icon={faShoppingBag} size="2x" className="text-success" />
+              <div className="stat-icon">
+                <FontAwesomeIcon icon={faShoppingBag} />
               </div>
-              <h3 className="text-success">{stats?.totalOrders || 0}</h3>
-              <p className="text-muted mb-0">Total Orders</p>
+              <div className="stat-content">
+                <h3>{stats?.totalOrders || 0}</h3>
+                <p>Total Orders</p>
+                <div className={`growth-badge ${growthData.ordersGrowth >= 0 ? 'positive' : 'negative'}`}>
+                  <FontAwesomeIcon icon={growthData.ordersGrowth >= 0 ? faArrowUp : faArrowDown} className="me-1" />
+                  {Math.abs(growthData.ordersGrowth)}%
+                </div>
+              </div>
             </Card.Body>
           </Card>
         </Col>
-        <Col lg={3} md={6} className="mb-3">
-          <Card className="text-center h-100">
+        <Col xl={3} lg={6} className="mb-4">
+          <Card className="stat-card products-card">
             <Card.Body>
-              <div className="mb-3">
-                <FontAwesomeIcon icon={faBoxes} size="2x" className="text-info" />
+              <div className="stat-icon">
+                <FontAwesomeIcon icon={faBoxes} />
               </div>
-              <h3 className="text-info">{stats?.totalProducts || 0}</h3>
-              <p className="text-muted mb-0">Total Products</p>
+              <div className="stat-content">
+                <h3>{stats?.totalProducts || 0}</h3>
+                <p>Total Products</p>
+                <div className={`growth-badge ${growthData.productsGrowth >= 0 ? 'positive' : 'negative'}`}>
+                  <FontAwesomeIcon icon={growthData.productsGrowth >= 0 ? faArrowUp : faArrowDown} className="me-1" />
+                  {Math.abs(growthData.productsGrowth)}%
+                </div>
+              </div>
             </Card.Body>
           </Card>
         </Col>
-        <Col lg={3} md={6} className="mb-3">
-          <Card className="text-center h-100">
+        <Col xl={3} lg={6} className="mb-4">
+          <Card className="stat-card revenue-card">
             <Card.Body>
-              <div className="mb-3">
-                <FontAwesomeIcon icon={faRupeeSign} size="2x" className="text-warning" />
+              <div className="stat-icon">
+                <FontAwesomeIcon icon={faRupeeSign} />
               </div>
-              <h3 className="text-warning">₹{stats?.totalRevenue?.toFixed(2) || '0.00'}</h3>
-              <p className="text-muted mb-0">Total Revenue</p>
+              <div className="stat-content">
+                <h3>₹{stats?.totalRevenue?.toFixed(2) || '0.00'}</h3>
+                <p>Total Revenue</p>
+                <div className={`growth-badge ${growthData.revenueGrowth >= 0 ? 'positive' : 'negative'}`}>
+                  <FontAwesomeIcon icon={growthData.revenueGrowth >= 0 ? faArrowUp : faArrowDown} className="me-1" />
+                  {Math.abs(growthData.revenueGrowth)}%
+                </div>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Main Content Area */}
+      <Row className="main-content-row">
+        {/* Revenue Overview with Chart */}
+        <Col lg={8} className="mb-4">
+          <Card className="dashboard-card">
+            <Card.Header className="dashboard-card-header">
+              <FontAwesomeIcon icon={faChartLine} className="me-2" />
+              Revenue Analytics
+            </Card.Header>
+            <Card.Body>
+              <Row>
+                <Col md={6} className="mb-3">
+                  <div className="metric-item">
+                    <label>Today's Revenue</label>
+                    <h4 className="text-primary">₹{stats?.todayRevenue?.toFixed(2) || '0.00'}</h4>
+                  </div>
+                </Col>
+                <Col md={6} className="mb-3">
+                  <div className="metric-item">
+                    <label>This Week</label>
+                    <h4 className="text-success">₹{stats?.weekRevenue?.toFixed(2) || '0.00'}</h4>
+                  </div>
+                </Col>
+                <Col md={6} className="mb-3">
+                  <div className="metric-item">
+                    <label>This Month</label>
+                    <h4 className="text-info">₹{stats?.monthRevenue?.toFixed(2) || '0.00'}</h4>
+                  </div>
+                </Col>
+                <Col md={6} className="mb-3">
+                  <div className="metric-item">
+                    <label>Avg Order Value</label>
+                    <h4 className="text-warning">₹{stats?.averageOrderValue?.toFixed(2) || '0.00'}</h4>
+                  </div>
+                </Col>
+              </Row>
+              <div className="chart-container" style={{ height: '300px' }}>
+                <Line data={chartData} options={chartOptions} />
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+
+        {/* Order Status */}
+        <Col lg={4} className="mb-4">
+          <Card className="dashboard-card">
+            <Card.Header className="dashboard-card-header">
+              <FontAwesomeIcon icon={faShoppingBag} className="me-2" />
+              Order Status
+            </Card.Header>
+            <Card.Body>
+              <div className="status-list">
+                <div className="status-item pending text-warning">
+                  <span className='text-warning'>Pending</span>
+                  <strong>{stats?.orderStatusBreakdown?.pending || 0}</strong>
+                </div>
+                <div className="status-item confirmed text-info">
+                  <span className='text-info'>Confirmed</span>
+                  <strong>{stats?.orderStatusBreakdown?.confirmed || 0}</strong>
+                </div>
+                <div className="status-item shipped text-primary">
+                  <span className='text-primary'>Shipped</span>
+                  <strong>{stats?.orderStatusBreakdown?.shipped || 0}</strong>
+                </div>
+                <div className="status-item delivered text-success">
+                  <span className='text-success'>Delivered</span>
+                  <strong>{stats?.orderStatusBreakdown?.delivered || 0}</strong>
+                </div>
+                 <div className="status-item cancelled text-danger">
+                  <span className='text-danger'>Cancelled</span>
+                  <strong>{stats?.orderStatusBreakdown?.cancelled || 0}</strong>
+                </div>
+              </div>
             </Card.Body>
           </Card>
         </Col>
       </Row>
 
       {/* Quick Actions */}
-      <Row className="mb-4">
-        <Col>
-          <Card>
-            <Card.Header>
-              <h5 className="mb-0">
+      <Card className="dashboard-card">
+        {/* <Card.Header className="dashboard-card-header">
+          <FontAwesomeIcon icon={faPlus} className="me-2" />
+          Quick Actions
+        </Card.Header> */}
+        {/* <Card.Body>
+          <Row className="quick-actions">
+            <Col md={3} sm={6} className="mb-3">
+              <Button variant="outline-primary" as={Link} to="/admin/products" className="action-btn w-100">
                 <FontAwesomeIcon icon={faPlus} className="me-2" />
-                Quick Actions
-              </h5>
-            </Card.Header>
-            <Card.Body>
-              <div className="d-flex flex-wrap gap-2">
-                <Button variant="primary" as={Link} to="/admin/products">
-                  <FontAwesomeIcon icon={faPlus} className="me-2" />
-                  Add New Product
-                </Button>
-                <Button variant="outline-primary" as={Link} to="/admin/orders">
-                  <FontAwesomeIcon icon={faEye} className="me-2" />
-                  View All Orders
-                </Button>
-                <Button variant="outline-info" as={Link} to="/admin/users">
-                  <FontAwesomeIcon icon={faUsers} className="me-2" />
-                  Manage Users
-                </Button>
-                <Button variant="outline-success" onClick={fetchStats}>
-                  <FontAwesomeIcon icon={faEye} className="me-2" />
-                  Refresh Data
-                </Button>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Revenue Overview */}
-      {stats && (
-        <Row>
-          <Col md={6}>
-            <Card>
-              <Card.Header>
-                <h6 className="mb-0">Revenue Overview</h6>
-              </Card.Header>
-              <Card.Body>
-                <div className="d-flex justify-content-between mb-2">
-                  <span>Today:</span>
-                  <strong className="text-primary">₹{stats.todayRevenue?.toFixed(2) || '0.00'}</strong>
-                </div>
-                <div className="d-flex justify-content-between mb-2">
-                  <span>This Week:</span>
-                  <strong className="text-primary">₹{stats.weekRevenue?.toFixed(2) || '0.00'}</strong>
-                </div>
-                <div className="d-flex justify-content-between mb-2">
-                  <span>This Month:</span>
-                  <strong className="text-primary">₹{stats.monthRevenue?.toFixed(2) || '0.00'}</strong>
-                </div>
-                <div className="d-flex justify-content-between">
-                  <span>Average Order Value:</span>
-                  <strong className="text-primary">₹{stats.averageOrderValue?.toFixed(2) || '0.00'}</strong>
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-          <Col md={6}>
-            <Card>
-              <Card.Header>
-                <h6 className="mb-0">Order Status</h6>
-              </Card.Header>
-              <Card.Body>
-                <div className="d-flex justify-content-between mb-2">
-                  <span>Pending:</span>
-                  <strong className="text-warning">{stats.orderStatusBreakdown?.pending || 0}</strong>
-                </div>
-                <div className="d-flex justify-content-between mb-2">
-                  <span>Confirmed:</span>
-                  <strong className="text-info">{stats.orderStatusBreakdown?.confirmed || 0}</strong>
-                </div>
-                <div className="d-flex justify-content-between mb-2">
-                  <span>Shipped:</span>
-                  <strong className="text-primary">{stats.orderStatusBreakdown?.shipped || 0}</strong>
-                </div>
-                <div className="d-flex justify-content-between">
-                  <span>Delivered:</span>
-                  <strong className="text-success">{stats.orderStatusBreakdown?.delivered || 0}</strong>
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      )}
+                Add Product
+              </Button>
+            </Col>
+            <Col md={3} sm={6} className="mb-3">
+              <Button variant="outline-success" as={Link} to="/admin/orders" className="action-btn w-100">
+                <FontAwesomeIcon icon={faEye} className="me-2" />
+                View Orders
+              </Button>
+            </Col>
+            <Col md={3} sm={6} className="mb-3">
+              <Button variant="outline-info" as={Link} to="/admin/users" className="action-btn w-100">
+                <FontAwesomeIcon icon={faUsers} className="me-2" />
+                Manage Users
+              </Button>
+            </Col>
+            <Col md={3} sm={6} className="mb-3">
+              <Button variant="outline-warning" onClick={fetchStats} className="action-btn w-100">
+                <FontAwesomeIcon icon={faRefresh} className="me-2" />
+                Refresh Data
+              </Button>
+            </Col>
+          </Row>
+        </Card.Body> */}
+      </Card>
     </AdminLayout>
   );
 };
